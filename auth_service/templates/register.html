@@ -3,55 +3,327 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-7 col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h3 class="fw-bold text-center mb-1"><i class="bi bi-person-plus"></i> Create Account</h3>
-        <p class="text-muted text-center">Join Alumni Hub in less than a minute</p>
+<div class="auth-shell">
+  <!-- ============ LEFT: brand panel (compact banner on mobile) ============ -->
+  <aside class="auth-brand">
+    <div class="auth-brand-dots"></div>
+    <div class="auth-brand-inner">
+      <div class="auth-brand-top">
+        <span class="auth-brand-logo">
+          <img src="{{ url_for('static', filename='logo.svg') }}" alt="Alumni Hub logo">
+        </span>
+        <span class="auth-brand-name">Alumni Hub</span>
+      </div>
+      <h2 class="auth-brand-headline">Join your alumni community.</h2>
+      <p class="auth-brand-sub">Create your free account — it takes less than a minute.</p>
 
-        <form method="post" action="/register">
-          <div class="mb-3">
-            <label class="form-label" for="name">Full name *</label>
-            <input class="form-control" id="name" name="name"
-                   placeholder="e.g. Rahul Sharma" required>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <span class="auth-feature-icon"><i class="bi bi-people-fill"></i></span>
+          <div>
+            <strong>Connect with batchmates</strong>
+            <span>Find classmates, alumni mentors and faculty in one directory.</span>
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="email">Email address *</label>
-            <input class="form-control" type="email" id="email" name="email"
-                   placeholder="you@example.com" required>
+        </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon"><i class="bi bi-briefcase-fill"></i></span>
+          <div>
+            <strong>Jobs &amp; referrals</strong>
+            <span>Discover openings shared by alumni and apply in minutes.</span>
           </div>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label" for="phone">Phone</label>
-              <input class="form-control" id="phone" name="phone"
-                     placeholder="e.g. 9876543210">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="role">I am a *</label>
-              <select class="form-select" id="role" name="role" required>
-                <option value="" selected disabled>Choose your role</option>
-                <option value="student">Student</option>
-                <option value="alumni">Alumni</option>
-                <option value="faculty">Faculty</option>
-              </select>
-            </div>
+        </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon"><i class="bi bi-megaphone-fill"></i></span>
+          <div>
+            <strong>Announcements &amp; chat</strong>
+            <span>Stay in the loop with campus news and 1-to-1 messaging.</span>
           </div>
-          <div class="mb-3 mt-3">
-            <label class="form-label" for="password">Password *</label>
-            <input class="form-control" type="password" id="password" name="password"
-                   placeholder="Minimum 6 characters" required minlength="6">
-          </div>
-          <button class="btn btn-primary w-100" type="submit">
-            <i class="bi bi-person-plus"></i> Register
-          </button>
-        </form>
+        </div>
+      </div>
 
-        <p class="text-center text-muted mt-3 mb-0">
-          Already have an account? <a href="/login">Login here</a>
-        </p>
+      <div class="auth-brand-chips">
+        <span class="auth-chip"><i class="bi bi-people"></i> Members</span>
+        <span class="auth-chip"><i class="bi bi-briefcase"></i> Jobs</span>
+        <span class="auth-chip"><i class="bi bi-megaphone"></i> Announcements</span>
       </div>
     </div>
+  </aside>
+
+  <!-- ============ RIGHT: the register form (contract unchanged) ============ -->
+  <div class="auth-form-side">
+    <h3 class="auth-title"><i class="bi bi-person-plus"></i> Create Account</h3>
+    <p class="auth-subtitle">Join Alumni Hub in less than a minute</p>
+
+    <form method="post" action="/register" id="registerForm">
+      <div class="auth-field" style="--i:0">
+        <label class="form-label" for="name">Full name *</label>
+        <div class="auth-input-wrap">
+          <i class="bi bi-person auth-input-icon"></i>
+          <input class="form-control" id="name" name="name"
+                 placeholder="e.g. Rahul Sharma" required autocomplete="name">
+        </div>
+      </div>
+
+      <div class="auth-field" style="--i:1">
+        <label class="form-label" for="email">Email address *</label>
+        <div class="auth-input-wrap">
+          <i class="bi bi-envelope auth-input-icon"></i>
+          <input class="form-control" type="email" id="email" name="email"
+                 placeholder="you@example.com" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="auth-field" style="--i:2">
+        <label class="form-label" for="phone">Phone</label>
+        <div class="auth-input-wrap">
+          <i class="bi bi-telephone auth-input-icon"></i>
+          <input class="form-control" id="phone" name="phone"
+                 placeholder="e.g. 9876543210" autocomplete="tel">
+        </div>
+      </div>
+
+      <div class="auth-field" style="--i:3">
+        <label class="form-label" id="roleLabel">I am a *</label>
+        <!-- Role picker cards: pure decoration on top of the real select
+             below. JS drives the select's value from these cards. -->
+        <div class="auth-role-grid" id="rolePills" role="radiogroup" aria-labelledby="roleLabel">
+          <button type="button" class="auth-role-card" data-role="student"
+                  role="radio" aria-checked="false">
+            <i class="bi bi-mortarboard"></i>Student
+            <span class="auth-role-check"><i class="bi bi-check-circle-fill"></i></span>
+          </button>
+          <button type="button" class="auth-role-card" data-role="alumni"
+                  role="radio" aria-checked="false">
+            <i class="bi bi-award"></i>Alumni
+            <span class="auth-role-check"><i class="bi bi-check-circle-fill"></i></span>
+          </button>
+          <button type="button" class="auth-role-card" data-role="faculty"
+                  role="radio" aria-checked="false">
+            <i class="bi bi-person-video3"></i>Faculty
+            <span class="auth-role-check"><i class="bi bi-check-circle-fill"></i></span>
+          </button>
+        </div>
+        <div class="auth-role-hint" id="roleHint">
+          <i class="bi bi-info-circle" id="roleHintIcon"></i>
+          <span id="roleHintText">Choose your role — you can complete your full profile after signing up.</span>
+        </div>
+        <p class="auth-role-error" id="roleError" hidden>
+          <i class="bi bi-exclamation-circle"></i> Please choose your role.
+        </p>
+        <!-- The REAL role field: this select's value is what gets POSTed.
+             With JS it is hidden and driven by the cards above; without
+             JS it works exactly like the original form. -->
+        <div id="roleSelectWrap" class="mt-2">
+          <div class="auth-input-wrap">
+            <i class="bi bi-person-badge auth-input-icon"></i>
+            <select class="form-select" id="role" name="role" required>
+              <option value="" selected disabled>Choose your role</option>
+              <option value="student">Student</option>
+              <option value="alumni">Alumni</option>
+              <option value="faculty">Faculty</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-field" style="--i:4">
+        <label class="form-label" for="password">Password *</label>
+        <div class="auth-input-wrap has-eye">
+          <i class="bi bi-lock auth-input-icon"></i>
+          <input class="form-control" type="password" id="password" name="password"
+                 placeholder="Minimum 6 characters" required minlength="6"
+                 autocomplete="new-password">
+          <button type="button" class="auth-eye" data-target="password"
+                  aria-label="Show or hide password">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <div class="auth-strength">
+          <div class="auth-strength-track">
+            <div class="auth-strength-fill" id="strengthFill"></div>
+          </div>
+          <span class="auth-strength-label" id="strengthLabel">Use at least 6 characters.</span>
+        </div>
+      </div>
+
+      <div class="auth-field" style="--i:5">
+        <label class="form-label" for="confirm_password">Confirm password *</label>
+        <div class="auth-input-wrap has-eye">
+          <i class="bi bi-lock-fill auth-input-icon"></i>
+          <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+                 placeholder="Type the password again" required
+                 autocomplete="new-password">
+          <button type="button" class="auth-eye" data-target="confirm_password"
+                  aria-label="Show or hide confirm password">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <p class="auth-match" id="matchMsg"></p>
+      </div>
+
+      <div class="auth-field" style="--i:6">
+        <button class="auth-submit" type="submit" id="registerSubmit">
+          <span class="auth-spinner"></span><span class="auth-submit-text">
+            <i class="bi bi-person-plus"></i> Create Account</span>
+        </button>
+      </div>
+    </form>
+
+    <p class="auth-crosslink">
+      Already have an account? <a href="/login">Login here</a>
+    </p>
+    <p class="auth-backlink">
+      <a href="{{ app_url }}/"><i class="bi bi-arrow-left"></i> Back to website</a>
+    </p>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Show / hide password eye toggles (both password fields).
+document.querySelectorAll('.auth-eye').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var input = document.getElementById(btn.dataset.target);
+    var icon = btn.querySelector('i');
+    var show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    input.focus();
+  });
+});
+
+// ---------- Role picker cards -> drive the real <select name="role"> ----
+var roleSelect = document.getElementById('role');
+var rolePills = document.querySelectorAll('.auth-role-card');
+var roleHint = document.getElementById('roleHint');
+var roleHintIcon = document.getElementById('roleHintIcon');
+var roleHintText = document.getElementById('roleHintText');
+var roleError = document.getElementById('roleError');
+var ROLE_HINTS = {
+  student: { icon: 'bi bi-mortarboard',
+             text: 'Students can connect with alumni, apply for jobs and join the community chat.' },
+  alumni:  { icon: 'bi bi-award',
+             text: 'Alumni can post jobs, mentor students and grow their professional network.' },
+  faculty: { icon: 'bi bi-person-video3',
+             text: 'Faculty can share announcements and guide students and alumni.' }
+};
+
+function chooseRole(role) {
+  rolePills.forEach(function (pill) {
+    var on = pill.dataset.role === role;
+    pill.classList.toggle('is-selected', on);
+    pill.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+  if (roleSelect.value !== role) roleSelect.value = role;
+  roleError.hidden = true;
+  var hint = ROLE_HINTS[role];
+  if (hint) {
+    // Fade the hint out, swap its content, fade it back in.
+    roleHint.classList.add('is-switching');
+    setTimeout(function () {
+      roleHintIcon.className = hint.icon;
+      roleHintText.textContent = hint.text;
+      roleHint.classList.remove('is-switching');
+    }, 180);
+  }
+}
+rolePills.forEach(function (pill) {
+  pill.addEventListener('click', function () { chooseRole(pill.dataset.role); });
+});
+roleSelect.addEventListener('change', function () { chooseRole(roleSelect.value); });
+
+// JS is running: hide the select and validate the role in the submit
+// handler instead (a hidden required select cannot be focused by the
+// browser's native validation UI). Without JS nothing changes.
+document.getElementById('roleSelectWrap').classList.add('d-none');
+roleSelect.required = false;
+
+// ---------- Live password strength meter ----------
+var pwdInput = document.getElementById('password');
+var strengthFill = document.getElementById('strengthFill');
+var strengthLabel = document.getElementById('strengthLabel');
+pwdInput.addEventListener('input', function () {
+  var v = pwdInput.value;
+  if (!v) {
+    strengthFill.style.width = '0';
+    strengthFill.className = 'auth-strength-fill';
+    strengthLabel.textContent = 'Use at least 6 characters.';
+    return;
+  }
+  var score = 0;
+  if (v.length >= 6) score++;
+  if (v.length >= 10) score++;
+  if (/[a-z]/.test(v) && /[A-Z]/.test(v)) score++;
+  if (/\d/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  strengthFill.style.width = (score / 5 * 100) + '%';
+  if (score <= 2) {
+    strengthFill.className = 'auth-strength-fill';
+    strengthLabel.textContent = 'Password strength: Weak' +
+      (v.length < 6 ? ' — minimum 6 characters.' : '.');
+  } else if (score === 3) {
+    strengthFill.className = 'auth-strength-fill fair';
+    strengthLabel.textContent = 'Password strength: Fair.';
+  } else {
+    strengthFill.className = 'auth-strength-fill strong';
+    strengthLabel.textContent = 'Password strength: Strong.';
+  }
+});
+
+// ---------- Live "passwords match" check ----------
+var confirmInput = document.getElementById('confirm_password');
+var matchMsg = document.getElementById('matchMsg');
+function checkMatch() {
+  if (!confirmInput.value) {
+    matchMsg.className = 'auth-match';
+    matchMsg.textContent = '';
+    confirmInput.setCustomValidity('');
+    return;
+  }
+  if (confirmInput.value === pwdInput.value) {
+    matchMsg.className = 'auth-match show ok';
+    matchMsg.innerHTML = '<i class="bi bi-check-circle-fill"></i> Passwords match';
+    confirmInput.setCustomValidity('');
+  } else {
+    matchMsg.className = 'auth-match show bad';
+    matchMsg.innerHTML = '<i class="bi bi-x-circle-fill"></i> Passwords do not match';
+    confirmInput.setCustomValidity('Passwords do not match.');
+  }
+}
+pwdInput.addEventListener('input', checkMatch);
+confirmInput.addEventListener('input', checkMatch);
+
+// ---------- Submit: role guard + loading state ----------
+var registerForm = document.getElementById('registerForm');
+registerForm.addEventListener('submit', function (e) {
+  if (!roleSelect.value) {
+    e.preventDefault();
+    roleError.hidden = false;
+    var grid = document.getElementById('rolePills');
+    grid.classList.remove('auth-shake');
+    void grid.offsetWidth;
+    grid.classList.add('auth-shake');
+    grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  if (!registerForm.checkValidity()) return;
+  var btn = document.getElementById('registerSubmit');
+  btn.classList.add('is-loading');
+  btn.querySelector('.auth-submit-text').textContent = 'Please wait…';
+  btn.disabled = true;
+});
+
+// Gentle shake on the field that failed native validation.
+registerForm.addEventListener('invalid', function (e) {
+  var field = e.target.closest('.auth-field');
+  if (!field) return;
+  field.classList.remove('auth-shake');
+  void field.offsetWidth;
+  field.classList.add('auth-shake');
+  field.addEventListener('animationend', function () {
+    field.classList.remove('auth-shake');
+  }, { once: true });
+}, true);
+</script>
 {% endblock %}

@@ -1165,3 +1165,503 @@ main {
     #mainNavbar .nav-link:hover, #mainNavbar .dropdown-item:hover,
     .ah-brand:hover .ah-brand-badge { transform: none; }
 }
+
+/* ==========================================================================
+   AUTH PAGES (login / register — served by the Flask auth service)
+   Split layout: animated gradient brand panel on the left, clean form
+   card on the right; on phones the panel becomes a compact top banner.
+   Every class is prefixed .auth- so the rest of the app is unaffected.
+   ========================================================================== */
+
+/* Flash alerts (both apps render .alert) slide down gently */
+@keyframes authAlertIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: none; }
+}
+.alert { animation: authAlertIn 0.35s ease both; }
+
+/* ---------- Shell: brand panel + form side in one rounded card ------- */
+.auth-shell {
+    display: flex;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 42, 90, 0.18), 0 4px 14px rgba(15, 42, 90, 0.08);
+    margin-top: 0.5rem;
+    animation: authShellIn 0.55s cubic-bezier(0.22, 0.8, 0.32, 1) both;
+}
+@keyframes authShellIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.995); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ---------- Brand panel (left) ---------- */
+.auth-brand {
+    position: relative;
+    flex: 0 0 44%;
+    max-width: 44%;
+    color: #fff;
+    padding: 2.6rem 2.4rem;
+    background: linear-gradient(150deg, #1e3a8a 0%, #1e40af 38%, #2563eb 72%, #2f7de1 100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+/* Soft drifting light blobs (pure CSS, very slow) */
+.auth-brand::before,
+.auth-brand::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.auth-brand::before {
+    width: 340px; height: 340px;
+    right: -120px; top: -110px;
+    background: radial-gradient(circle, rgba(125, 211, 252, 0.5), rgba(125, 211, 252, 0) 70%);
+    animation: authBlobDrift 16s ease-in-out infinite alternate;
+}
+.auth-brand::after {
+    width: 280px; height: 280px;
+    left: -100px; bottom: -120px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 70%);
+    animation: authBlobDrift 20s ease-in-out infinite alternate-reverse;
+}
+@keyframes authBlobDrift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(-26px, 22px) scale(1.08); }
+}
+/* Faint dot pattern over the gradient */
+.auth-brand-dots {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.2px, transparent 1.3px);
+    background-size: 22px 22px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+.auth-brand-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.auth-brand-top {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+.auth-brand-logo {
+    flex: 0 0 auto;
+    width: 64px; height: 64px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px rgba(2, 20, 60, 0.25);
+}
+.auth-brand-logo img { width: 46px; height: 46px; }
+.auth-brand-name {
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: 0.2px;
+    line-height: 1.15;
+}
+.auth-brand-headline {
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 1.9rem 0 0.5rem;
+}
+.auth-brand-sub {
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 1.9rem;
+}
+.auth-feature {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    margin-bottom: 1.05rem;
+}
+.auth-feature-icon {
+    flex: 0 0 40px;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+}
+.auth-feature strong { display: block; font-size: 0.95rem; }
+.auth-feature span { color: rgba(255, 255, 255, 0.78); font-size: 0.85rem; }
+.auth-brand-chips {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 1.4rem;
+}
+.auth-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.38rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* ---------- Form side (right) ---------- */
+.auth-form-side {
+    flex: 1;
+    min-width: 0;
+    padding: 2.4rem 2.4rem 2rem;
+}
+.auth-title { font-weight: 800; margin-bottom: 0.25rem; }
+.auth-subtitle { color: #64748b; margin-bottom: 1.5rem; }
+
+/* Fields fade/slide in one after another (delay via --i in the HTML) */
+.auth-field {
+    margin-bottom: 1rem;
+    animation: authFadeUp 0.5s ease both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes authFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Input with a leading icon; focus = blue ring + icon lights up */
+.auth-input-wrap { position: relative; }
+.auth-input-icon {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    transition: color 0.2s;
+    pointer-events: none;
+    z-index: 5;
+}
+.auth-input-wrap .form-control,
+.auth-input-wrap .form-select {
+    padding-left: 2.65rem;
+    min-height: 48px;
+    border-radius: 12px;
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+}
+.auth-input-wrap .form-control:focus,
+.auth-input-wrap .form-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    transform: translateY(-1px);
+}
+.auth-input-wrap:focus-within .auth-input-icon { color: #2563eb; }
+.auth-input-wrap.has-eye .form-control { padding-right: 3.2rem; }
+
+/* Show / hide password eye button */
+.auth-eye {
+    position: absolute;
+    right: 0.3rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px; height: 44px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: color 0.2s, background 0.2s;
+}
+.auth-eye:hover { color: #2563eb; background: rgba(37, 99, 235, 0.08); }
+
+/* ---------- Gradient submit button with shine + loading state -------- */
+.auth-submit {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: 50px;
+    border: 0;
+    border-radius: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(90deg, #1e40af, #2563eb 55%, #2f7de1);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+}
+.auth-submit:hover {
+    color: #fff;
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px rgba(37, 99, 235, 0.4);
+}
+.auth-submit::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -80%;
+    width: 50%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+}
+.auth-submit:hover::after { left: 130%; }
+.auth-submit:disabled { opacity: 0.75; }
+.auth-spinner {
+    display: none;
+    width: 1rem; height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: authSpin 0.7s linear infinite;
+    vertical-align: -2px;
+    margin-right: 0.5rem;
+}
+.auth-submit.is-loading .auth-spinner { display: inline-block; }
+@keyframes authSpin { to { transform: rotate(360deg); } }
+
+/* ---------- Demo accounts: 2x2 tap-to-fill cards (login) ---------- */
+.auth-demo { margin-top: 1.6rem; }
+.auth-demo-caption {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}
+.auth-demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+.auth-demo-card {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 56px;
+    padding: 0.6rem 0.7rem;
+    text-align: left;
+    background: #fff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+}
+.auth-demo-card:hover {
+    transform: translateY(-2px);
+    border-color: #2563eb;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.14);
+}
+.auth-demo-card.is-filled {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.06);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.auth-demo-ico {
+    flex: 0 0 38px;
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+.auth-demo-ico.blue  { background: rgba(37, 99, 235, 0.12);  color: #2563eb; }
+.auth-demo-ico.green { background: rgba(22, 163, 74, 0.12);  color: #16a34a; }
+.auth-demo-ico.amber { background: rgba(217, 119, 6, 0.14);  color: #d97706; }
+.auth-demo-ico.dark  { background: rgba(51, 65, 85, 0.12);   color: #334155; }
+.auth-demo-meta { min-width: 0; }
+.auth-demo-meta strong { display: block; font-size: 0.88rem; line-height: 1.15; }
+.auth-demo-meta span {
+    display: block;
+    font-size: 0.72rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- Role picker cards (register) ---------- */
+.auth-role-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+}
+.auth-role-card {
+    position: relative;
+    width: 100%;
+    min-height: 64px;
+    padding: 0.7rem 0.4rem 0.6rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #334155;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s, color 0.2s;
+}
+.auth-role-card > i { font-size: 1.25rem; color: #64748b; transition: color 0.2s; }
+.auth-role-card:hover { border-color: #93c5fd; transform: translateY(-2px); }
+.auth-role-card.is-selected {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.06);
+    color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.auth-role-card.is-selected > i { color: #2563eb; }
+.auth-role-check {
+    position: absolute;
+    top: 0.35rem; right: 0.45rem;
+    font-size: 0.8rem;
+    color: #2563eb;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+}
+.auth-role-card.is-selected .auth-role-check { opacity: 1; transform: scale(1); }
+.auth-role-hint {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.85rem;
+    color: #475569;
+    margin-top: 0.6rem;
+    transition: opacity 0.18s ease;
+}
+.auth-role-hint.is-switching { opacity: 0; }
+.auth-role-hint i { color: #2563eb; font-size: 1rem; margin-top: 0.1rem; }
+.auth-role-error {
+    color: #dc2626;
+    font-size: 0.82rem;
+    margin: 0.45rem 0 0;
+}
+
+/* ---------- Password strength meter + match hint (register) ---------- */
+.auth-strength { margin-top: 0.55rem; }
+.auth-strength-track {
+    height: 6px;
+    border-radius: 99px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+.auth-strength-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 99px;
+    background: #dc2626;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+.auth-strength-fill.fair   { background: #f59e0b; }
+.auth-strength-fill.strong { background: #16a34a; }
+.auth-strength-label {
+    display: block;
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 0.3rem;
+}
+.auth-match {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    margin-top: 0.4rem;
+}
+.auth-match.show { display: flex; }
+.auth-match.ok  { color: #16a34a; }
+.auth-match.bad { color: #dc2626; }
+
+/* ---------- Gentle shake when a field fails validation ---------- */
+@keyframes authShake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+}
+.auth-shake { animation: authShake 0.45s ease both; }
+
+/* ---------- Cross links under the form ---------- */
+.auth-crosslink { text-align: center; color: #64748b; margin: 1.4rem 0 0; }
+.auth-backlink { text-align: center; margin: 0.5rem 0 0; font-size: 0.9rem; }
+.auth-backlink a { color: #64748b; text-decoration: none; }
+.auth-backlink a:hover { color: #2563eb; }
+
+/* ---------- Mobile: brand panel becomes a compact top banner ---------- */
+@media (max-width: 991.98px) {
+    .auth-shell { flex-direction: column; }
+    .auth-brand {
+        flex: none;
+        max-width: none;
+        padding: 1.3rem 1.4rem 1.15rem;
+    }
+    .auth-brand-logo { width: 48px; height: 48px; border-radius: 14px; }
+    .auth-brand-logo img { width: 34px; height: 34px; }
+    .auth-brand-name { font-size: 1.15rem; }
+    .auth-brand-headline { display: none; }
+    .auth-brand-sub { margin: 0.55rem 0 0; font-size: 0.9rem; }
+    .auth-features, .auth-brand-chips { display: none; }
+    .auth-form-side { padding: 1.6rem 1.25rem 1.4rem; }
+}
+@media (max-width: 420px) {
+    .auth-demo-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- Reduced motion: calm the auth pages down too ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .alert, .auth-shell, .auth-field { animation: none; }
+    .auth-brand::before, .auth-brand::after { animation: none; }
+    .auth-shake { animation: none; }
+    .auth-submit, .auth-demo-card, .auth-role-card,
+    .auth-input-wrap .form-control, .auth-input-wrap .form-select,
+    .auth-strength-fill, .auth-role-hint { transition: none; }
+    .auth-submit:hover, .auth-demo-card:hover, .auth-role-card:hover,
+    .auth-input-wrap .form-control:focus { transform: none; }
+    .auth-submit::after { display: none; }
+}
+
+/* ==========================================================================
+   NAVBAR OVERFLOW SAFETY
+   The page must never scroll sideways. Root cause of the old bug: the
+   logged-in link row was wider than the viewport, pushing the profile
+   avatar off screen (the extra links now live in the "More" dropdown).
+   As a guard, the body clips horizontal overflow - "clip", not
+   "hidden", so the sticky header keeps working - and the navbar's
+   flex children may shrink instead of forcing the bar wider.
+   (Checked: the sheen layer is inset:0 inside the bar and no rule in
+   this file uses 100vw, so nothing else can exceed the viewport.)
+   ========================================================================== */
+body { overflow-x: clip; }
+#mainNavbar .container,
+#mainNavbar .navbar-collapse,
+#mainNavbar .navbar-nav { min-width: 0; }
+
+/* In the lg band (992-1199px) the desktop bar is at its tightest -
+   the admin bar carries one extra pill - so it compacts: slimmer
+   pills, no brand tagline, avatar-only profile toggle. From xl up
+   there is room for the full-size bar again. */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    #mainNavbar .nav-link {
+        padding-left: 0.55rem;
+        padding-right: 0.55rem;
+        margin-left: 0.02rem;
+        margin-right: 0.02rem;
+    }
+    #mainNavbar .ah-brand-tagline { display: none; }
+    #mainNavbar .ah-profile-name { display: none; }
+}

@@ -26,7 +26,11 @@
 <!-- ======================= NAVBAR ======================= -->
 <!-- Redesigned header: gradient bar, badge brand, pill links.
      All styling lives in the "HEADER / NAVBAR" section of style.css;
-     behaviour (the .scrolled shrink/shadow) is toggled by main.js. -->
+     behaviour (the .scrolled shrink/shadow) is toggled by main.js.
+     Logged-in layout: the everyday links stay visible on desktop and
+     the rest live in a "More" dropdown, so the bar ALWAYS fits the
+     viewport - no horizontal scrolling, profile avatar on screen.
+     On mobile the collapsed panel shows the full list flat instead. -->
 <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark sticky-top">
   <div class="container">
     <a class="navbar-brand ah-brand" href="/">
@@ -45,7 +49,8 @@
     </button>
 
     <div class="collapse navbar-collapse" id="mainNav">
-      <!-- Common links: visible to everyone, guest or logged in -->
+      <% if (!currentUser) { %>
+      <!-- Common links: visible to guests -->
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
           <a class="nav-link <%= navSection === 'home' ? 'active' : '' %>" href="/">Home</a>
@@ -61,9 +66,141 @@
         </li>
       </ul>
 
-      <% if (currentUser) { %>
-      <!-- Links for logged-in users -->
+      <!-- Links for guests (login/register live on the Python auth service) -->
       <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item">
+          <a class="nav-link ah-btn-ghost" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-light btn-sm mt-1 ms-lg-2 fw-semibold ah-btn-register" href="/register">Register</a>
+        </li>
+      </ul>
+      <% } else { %>
+      <% const moreActive = ['home', 'about', 'services', 'contact', 'announcements', 'faq'].includes(navSection); %>
+      <!-- Logged-in DESKTOP bar (>= lg): everyday links + "More" dropdown -->
+      <ul class="navbar-nav ms-auto align-items-lg-center d-none d-lg-flex">
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'members' ? 'active' : '' %>" href="/search">
+            <i class="bi bi-people"></i> Members
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'connections' ? 'active' : '' %>" href="/connections">
+            <i class="bi bi-person-plus"></i> Connections
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link position-relative <%= navSection === 'chat' ? 'active' : '' %>" href="/chat">
+            <i class="bi bi-chat-dots"></i> Chat
+            <% if (unreadMessages) { %>
+            <span class="badge rounded-pill bg-danger badge-dot"><%= unreadMessages %></span>
+            <% } %>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'jobs' ? 'active' : '' %>" href="/jobs">
+            <i class="bi bi-briefcase"></i> Jobs
+          </a>
+        </li>
+        <!-- "More": the links that do not fit the bar live here -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle <%= moreActive ? 'active' : '' %>" href="#"
+             role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-grid"></i> More
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item <%= navSection === 'home' ? 'active' : '' %>" href="/"><i class="bi bi-house"></i> Home</a></li>
+            <li><a class="dropdown-item <%= navSection === 'about' ? 'active' : '' %>" href="/about"><i class="bi bi-info-circle"></i> About</a></li>
+            <li><a class="dropdown-item <%= navSection === 'services' ? 'active' : '' %>" href="/services"><i class="bi bi-grid-1x2"></i> Services</a></li>
+            <li><a class="dropdown-item <%= navSection === 'contact' ? 'active' : '' %>" href="/contact"><i class="bi bi-envelope"></i> Contact</a></li>
+            <li><a class="dropdown-item <%= navSection === 'announcements' ? 'active' : '' %>" href="/announcements"><i class="bi bi-megaphone"></i> Announcements</a></li>
+            <li><a class="dropdown-item <%= navSection === 'faq' ? 'active' : '' %>" href="/faq"><i class="bi bi-question-circle"></i> FAQ</a></li>
+          </ul>
+        </li>
+        <% if (currentUser.role === 'admin') { %>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle <%= navSection.startsWith('admin') ? 'active' : '' %>" href="#"
+             role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-shield-lock"></i> Admin
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/admin"><i class="bi bi-speedometer2"></i> Admin Dashboard</a></li>
+            <li><a class="dropdown-item" href="/admin/users"><i class="bi bi-people"></i> Manage Users</a></li>
+            <li><a class="dropdown-item" href="/admin/jobs"><i class="bi bi-briefcase"></i> Manage Jobs</a></li>
+            <li><a class="dropdown-item" href="/admin/messages"><i class="bi bi-envelope"></i> Contact Messages</a></li>
+          </ul>
+        </li>
+        <% } %>
+        <li class="nav-item">
+          <a class="nav-link ah-icon-btn position-relative <%= navSection === 'notifications' ? 'active' : '' %>" href="/notifications"
+             title="Notifications">
+            <i class="bi bi-bell"></i>
+            <% if (unreadNotifications) { %>
+            <span class="badge rounded-pill bg-danger badge-dot"><%= unreadNotifications %></span>
+            <% } %>
+          </a>
+        </li>
+        <!-- Profile dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle ah-profile-toggle d-flex align-items-center gap-2" href="#"
+             role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="<%= avatarUrl(currentUser) %>" alt="avatar" class="avatar avatar-sm me-1">
+            <span class="ah-profile-name"><%= currentUser.name.split(' ')[0] %></span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <!-- Rich header block: who is signed in -->
+            <li class="ah-dropdown-header">
+              <img src="<%= avatarUrl(currentUser) %>" alt="" class="avatar avatar-sm">
+              <span class="ah-dropdown-user">
+                <span class="ah-dropdown-name"><%= currentUser.name %></span>
+                <span class="ah-dropdown-email"><%= currentUser.email %></span>
+                <span class="badge bg-secondary"><%= capitalize(currentUser.role) %></span>
+              </span>
+            </li>
+            <li><a class="dropdown-item" href="/profile/<%= currentUser.id %>"><i class="bi bi-person"></i> My Profile</a></li>
+            <li><a class="dropdown-item" href="/profile/edit"><i class="bi bi-pencil-square"></i> Edit Profile</a></li>
+            <% if (currentUser.role === 'student') { %>
+            <li><a class="dropdown-item" href="/my-applications"><i class="bi bi-file-earmark-text"></i> My Applications</a></li>
+            <% } %>
+            <% if (currentUser.role === 'alumni') { %>
+            <li><a class="dropdown-item" href="/my-jobs"><i class="bi bi-briefcase"></i> My Jobs</a></li>
+            <% } %>
+            <li><a class="dropdown-item" href="/change-password"><i class="bi bi-key"></i> Change Password</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- Logged-in MOBILE panel (< lg): the FULL list, flat - the panel
+           scrolls vertically, so every link gets its own row here,
+           including the ones tucked into "More" on desktop. -->
+      <ul class="navbar-nav d-lg-none">
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'home' ? 'active' : '' %>" href="/">
+            <i class="bi bi-house"></i> Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'about' ? 'active' : '' %>" href="/about">
+            <i class="bi bi-info-circle"></i> About
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'services' ? 'active' : '' %>" href="/services">
+            <i class="bi bi-grid-1x2"></i> Services
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'contact' ? 'active' : '' %>" href="/contact">
+            <i class="bi bi-envelope"></i> Contact
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link <%= navSection === 'dashboard' ? 'active' : '' %>" href="/dashboard">
             <i class="bi bi-speedometer2"></i> Dashboard
@@ -97,18 +234,31 @@
             <i class="bi bi-megaphone"></i> Announcements
           </a>
         </li>
-        <% if (currentUser.role === 'admin') { %>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle <%= navSection.startsWith('admin') ? 'active' : '' %>" href="#"
-             role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-shield-lock"></i> Admin
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'faq' ? 'active' : '' %>" href="/faq">
+            <i class="bi bi-question-circle"></i> FAQ
           </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="/admin"><i class="bi bi-speedometer2"></i> Admin Dashboard</a></li>
-            <li><a class="dropdown-item" href="/admin/users"><i class="bi bi-people"></i> Manage Users</a></li>
-            <li><a class="dropdown-item" href="/admin/jobs"><i class="bi bi-briefcase"></i> Manage Jobs</a></li>
-            <li><a class="dropdown-item" href="/admin/messages"><i class="bi bi-envelope"></i> Contact Messages</a></li>
-          </ul>
+        </li>
+        <% if (currentUser.role === 'admin') { %>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'admin_dashboard' ? 'active' : '' %>" href="/admin">
+            <i class="bi bi-speedometer2"></i> Admin Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'admin_users' ? 'active' : '' %>" href="/admin/users">
+            <i class="bi bi-people"></i> Manage Users
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'admin_jobs' ? 'active' : '' %>" href="/admin/jobs">
+            <i class="bi bi-briefcase"></i> Manage Jobs
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= navSection === 'admin_messages' ? 'active' : '' %>" href="/admin/messages">
+            <i class="bi bi-envelope"></i> Contact Messages
+          </a>
         </li>
         <% } %>
         <li class="nav-item">
@@ -120,15 +270,14 @@
             <% } %>
           </a>
         </li>
-        <!-- Profile dropdown -->
+        <!-- Profile dropdown (same as desktop) -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle ah-profile-toggle d-flex align-items-center gap-2" href="#"
              role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <img src="<%= avatarUrl(currentUser) %>" alt="avatar" class="avatar avatar-sm me-1">
-            <span><%= currentUser.name.split(' ')[0] %></span>
+            <span class="ah-profile-name"><%= currentUser.name.split(' ')[0] %></span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <!-- Rich header block: who is signed in -->
             <li class="ah-dropdown-header">
               <img src="<%= avatarUrl(currentUser) %>" alt="" class="avatar avatar-sm">
               <span class="ah-dropdown-user">
@@ -149,16 +298,6 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
           </ul>
-        </li>
-      </ul>
-      <% } else { %>
-      <!-- Links for guests (login/register live on the Python auth service) -->
-      <ul class="navbar-nav ms-auto align-items-lg-center">
-        <li class="nav-item">
-          <a class="nav-link ah-btn-ghost" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
-        </li>
-        <li class="nav-item">
-          <a class="btn btn-light btn-sm mt-1 ms-lg-2 fw-semibold ah-btn-register" href="/register">Register</a>
         </li>
       </ul>
       <% } %>

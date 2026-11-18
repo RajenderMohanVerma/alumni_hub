@@ -3,63 +3,130 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h3 class="fw-bold text-center mb-1"><i class="bi bi-box-arrow-in-right"></i> Login</h3>
-        <p class="text-muted text-center">Welcome back to Alumni Hub</p>
+<div class="auth-shell">
+  <!-- ============ LEFT: brand panel (compact banner on mobile) ============ -->
+  <aside class="auth-brand">
+    <div class="auth-brand-dots"></div>
+    <div class="auth-brand-inner">
+      <div class="auth-brand-top">
+        <span class="auth-brand-logo">
+          <img src="{{ url_for('static', filename='logo.svg') }}" alt="Alumni Hub logo">
+        </span>
+        <span class="auth-brand-name">Alumni Hub</span>
+      </div>
+      <h2 class="auth-brand-headline">Welcome back to your community.</h2>
+      <p class="auth-brand-sub">Connect · Grow · Succeed — pick up right where you left off.</p>
 
-        <form method="post" action="/login">
-          <div class="mb-3">
-            <label class="form-label" for="email">Email address</label>
-            <input class="form-control" type="email" id="email" name="email"
-                   placeholder="you@example.com" required value="{{ email }}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="password">Password</label>
-            <input class="form-control" type="password" id="password" name="password"
-                   placeholder="Your password" required>
-          </div>
-          <button class="btn btn-primary w-100" type="submit">
-            <i class="bi bi-box-arrow-in-right"></i> Login
-          </button>
-        </form>
-
-        <!-- Demo accounts: one click fills the login form -->
-        <div class="demo-box mt-4">
-          <p class="fw-semibold mb-2 text-center">
-            <i class="bi bi-lightning-charge"></i> Try a demo account — click to fill:
-          </p>
-          <div class="d-grid gap-2">
-            <button type="button" class="btn btn-outline-primary demo-fill"
-                    data-email="student@demo.com" data-password="student123">
-              <i class="bi bi-mortarboard"></i> Student
-              <span class="demo-cred">student@demo.com / student123</span>
-            </button>
-            <button type="button" class="btn btn-outline-success demo-fill"
-                    data-email="alumni@demo.com" data-password="alumni123">
-              <i class="bi bi-award"></i> Alumni
-              <span class="demo-cred">alumni@demo.com / alumni123</span>
-            </button>
-            <button type="button" class="btn btn-outline-warning demo-fill"
-                    data-email="faculty@demo.com" data-password="faculty123">
-              <i class="bi bi-person-video3"></i> Faculty
-              <span class="demo-cred">faculty@demo.com / faculty123</span>
-            </button>
-            <button type="button" class="btn btn-outline-dark demo-fill"
-                    data-email="admin@alumnihub.com" data-password="admin123">
-              <i class="bi bi-shield-lock"></i> Admin
-              <span class="demo-cred">admin@alumnihub.com / admin123</span>
-            </button>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <span class="auth-feature-icon"><i class="bi bi-people-fill"></i></span>
+          <div>
+            <strong>Connect with batchmates</strong>
+            <span>Find classmates, alumni mentors and faculty in one directory.</span>
           </div>
         </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon"><i class="bi bi-briefcase-fill"></i></span>
+          <div>
+            <strong>Jobs &amp; referrals</strong>
+            <span>Discover openings shared by alumni and apply in minutes.</span>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <span class="auth-feature-icon"><i class="bi bi-megaphone-fill"></i></span>
+          <div>
+            <strong>Announcements &amp; chat</strong>
+            <span>Stay in the loop with campus news and 1-to-1 messaging.</span>
+          </div>
+        </div>
+      </div>
 
-        <p class="text-center text-muted mt-3 mb-0">
-          New to Alumni Hub? <a href="/register">Create an account</a>
-        </p>
+      <div class="auth-brand-chips">
+        <span class="auth-chip"><i class="bi bi-people"></i> Members</span>
+        <span class="auth-chip"><i class="bi bi-briefcase"></i> Jobs</span>
+        <span class="auth-chip"><i class="bi bi-megaphone"></i> Announcements</span>
       </div>
     </div>
+  </aside>
+
+  <!-- ============ RIGHT: the login form (contract unchanged) ============ -->
+  <div class="auth-form-side">
+    <h3 class="auth-title"><i class="bi bi-box-arrow-in-right"></i> Login</h3>
+    <p class="auth-subtitle">Welcome back to Alumni Hub</p>
+
+    <form method="post" action="/login" id="loginForm">
+      <div class="auth-field" style="--i:0">
+        <label class="form-label" for="email">Email address</label>
+        <div class="auth-input-wrap">
+          <i class="bi bi-envelope auth-input-icon"></i>
+          <input class="form-control" type="email" id="email" name="email"
+                 placeholder="you@example.com" required value="{{ email }}"
+                 autocomplete="email">
+        </div>
+      </div>
+      <div class="auth-field" style="--i:1">
+        <label class="form-label" for="password">Password</label>
+        <div class="auth-input-wrap has-eye">
+          <i class="bi bi-lock auth-input-icon"></i>
+          <input class="form-control" type="password" id="password" name="password"
+                 placeholder="Your password" required autocomplete="current-password">
+          <button type="button" class="auth-eye" data-target="password"
+                  aria-label="Show or hide password">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div class="auth-field" style="--i:2">
+        <button class="auth-submit" type="submit" id="loginSubmit">
+          <span class="auth-spinner"></span><span class="auth-submit-text">
+            <i class="bi bi-box-arrow-in-right"></i> Login</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Demo accounts: one tap fills the login form (same data-* contract) -->
+    <div class="auth-demo">
+      <p class="auth-demo-caption">
+        <i class="bi bi-lightning-charge"></i> Demo accounts — tap to fill
+      </p>
+      <div class="auth-demo-grid">
+        <button type="button" class="auth-demo-card demo-fill"
+                data-email="student@demo.com" data-password="student123">
+          <span class="auth-demo-ico blue"><i class="bi bi-mortarboard"></i></span>
+          <span class="auth-demo-meta">
+            <strong>Student</strong><span>student@demo.com</span>
+          </span>
+        </button>
+        <button type="button" class="auth-demo-card demo-fill"
+                data-email="alumni@demo.com" data-password="alumni123">
+          <span class="auth-demo-ico green"><i class="bi bi-award"></i></span>
+          <span class="auth-demo-meta">
+            <strong>Alumni</strong><span>alumni@demo.com</span>
+          </span>
+        </button>
+        <button type="button" class="auth-demo-card demo-fill"
+                data-email="faculty@demo.com" data-password="faculty123">
+          <span class="auth-demo-ico amber"><i class="bi bi-person-video3"></i></span>
+          <span class="auth-demo-meta">
+            <strong>Faculty</strong><span>faculty@demo.com</span>
+          </span>
+        </button>
+        <button type="button" class="auth-demo-card demo-fill"
+                data-email="admin@alumnihub.com" data-password="admin123">
+          <span class="auth-demo-ico dark"><i class="bi bi-shield-lock"></i></span>
+          <span class="auth-demo-meta">
+            <strong>Admin</strong><span>admin@alumnihub.com</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <p class="auth-crosslink">
+      New to Alumni Hub? <a href="/register">Create an account</a>
+    </p>
+    <p class="auth-backlink">
+      <a href="{{ app_url }}/"><i class="bi bi-arrow-left"></i> Back to website</a>
+    </p>
   </div>
 </div>
 {% endblock %}
@@ -67,14 +134,52 @@
 {% block scripts %}
 <script>
 // Click-to-fill demo accounts: put the email + password into the form
-// and highlight the Login button - the user just presses Login.
+// and focus the password field - the user just presses Login.
 document.querySelectorAll('.demo-fill').forEach(function (btn) {
   btn.addEventListener('click', function () {
     document.getElementById('email').value = btn.dataset.email;
     var pwd = document.getElementById('password');
     pwd.value = btn.dataset.password;
+    document.querySelectorAll('.demo-fill').forEach(function (b) {
+      b.classList.toggle('is-filled', b === btn);
+    });
     pwd.focus();
   });
 });
+
+// Show / hide password eye toggle.
+document.querySelectorAll('.auth-eye').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var input = document.getElementById(btn.dataset.target);
+    var icon = btn.querySelector('i');
+    var show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    input.focus();
+  });
+});
+
+// Submit button: brief spinner + "Please wait..." state. Runs only
+// when native validation passed; it never prevents the POST.
+var loginForm = document.getElementById('loginForm');
+loginForm.addEventListener('submit', function () {
+  if (!loginForm.checkValidity()) return;
+  var btn = document.getElementById('loginSubmit');
+  btn.classList.add('is-loading');
+  btn.querySelector('.auth-submit-text').textContent = 'Please wait…';
+  btn.disabled = true;
+});
+
+// Gentle shake on the field that failed native validation.
+loginForm.addEventListener('invalid', function (e) {
+  var field = e.target.closest('.auth-field');
+  if (!field) return;
+  field.classList.remove('auth-shake');
+  void field.offsetWidth;
+  field.classList.add('auth-shake');
+  field.addEventListener('animationend', function () {
+    field.classList.remove('auth-shake');
+  }, { once: true });
+}, true);
 </script>
 {% endblock %}
