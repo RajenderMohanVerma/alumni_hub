@@ -23,14 +23,16 @@
           <% } else { %>
             <div class="d-flex gap-2">
               <% if (connectionStatus === 'none' || connectionStatus === 'rejected') { %>
-                <form method="post" action="/connect/<%= person.id %>">
+                <form method="post" action="/connect/<%= person.id %>"
+                      class="js-connect-form" data-name="<%= person.name %>"
+                      data-sent-html='<button class="btn btn-secondary" disabled><i class="bi bi-check-lg"></i> Request Sent</button>'>
                   <button class="btn btn-primary" type="submit">
                     <i class="bi bi-person-plus"></i> Connect
                   </button>
                 </form>
               <% } else if (connectionStatus === 'pending_sent') { %>
                 <button class="btn btn-secondary" disabled>
-                  <i class="bi bi-hourglass-split"></i> Request Sent
+                  <i class="bi bi-check-lg"></i> Request Sent
                 </button>
               <% } else if (connectionStatus === 'pending_received') { %>
                 <a href="/connections" class="btn btn-warning">

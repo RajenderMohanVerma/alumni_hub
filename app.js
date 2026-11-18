@@ -802,7 +802,11 @@ app.get("/search", requireAuth, (req, res) => {
             (users.photo_data IS NOT NULL) AS has_photo,
             users.photo_updated_at,
             COALESCE(sp.skills, ap.skills, fp.skills) AS skills,
-            COALESCE(sp.bio, ap.bio, fp.bio) AS bio
+            COALESCE(sp.bio, ap.bio, fp.bio) AS bio,
+            sp.course AS course, sp.branch AS branch,
+            ap.company AS company,
+            COALESCE(ap.designation, fp.designation) AS designation,
+            fp.department AS department
        FROM users
        LEFT JOIN student_profile sp ON sp.user_id = users.id
        LEFT JOIN alumni_profile ap ON ap.user_id = users.id
@@ -816,23 +820,60 @@ app.get("/search", requireAuth, (req, res) => {
   sql += " ORDER BY users.name";
   const members = db.prepare(sql).all(...params);
 
+  // Per-role totals for the filter pills. These count the whole directory
+  // (same WHERE rules as the listing), not just the current role tab, so
+  // every pill can show its real number on every tab.
+  const counts = { all: 0, student: 0, alumni: 0, faculty: 0 };
+  db.prepare(
+    `SELECT role, COUNT(*) AS n FROM users
+      WHERE id != ? AND role != 'admin' GROUP BY role`
+  )
+    .all(req.user.id)
+    .forEach((r) => {
+      if (r.role in counts) {
+        counts[r.role] = r.n;
+        counts.all += r.n;
+      }
+    });
+
   // connection status of the logged-in user with every listed member
   const statuses = {};
   for (const m of members) {
     statuses[m.id] = connectionStatus(db, req.user.id, m.id);
   }
-  res.render("search", { members, role, statuses });
+  res.render("search", { members, role, statuses, counts });
 });
 
-// Send a connection request
+// Send a connection request.
+// Two transports, same semantics:
+//  - normal form post  -> flash cookie + redirect back to /search (as before)
+//  - fetch from the Members page (header "X-Requested-With: fetch") ->
+//    a small JSON answer, so the card can update in place with no reload.
+//    The JSON path never calls flashRedirect(), so no ah_flash cookie is
+//    set and no stale flash can leak into the user's next page view.
 app.post("/connect/:userId", requireAuth, (req, res) => {
   const db = models.openDb();
   const otherId = parseInt(req.params.userId, 10);
-  if (otherId === req.user.id) return res.redirect("/search");
+  const wantsJson = req.get("X-Requested-With") === "fetch";
+  if (otherId === req.user.id) {
+    if (wantsJson) {
+      return res
+        .status(400)
+        .json({ ok: false, state: "none", message: "You cannot connect with yourself." });
+    }
+    return res.redirect("/search");
+  }
   const other = db
     .prepare("SELECT id, name, email, role, is_active FROM users WHERE id = ?")
     .get(otherId);
-  if (!other) return res.status(404).render("errors/404");
+  if (!other) {
+    if (wantsJson) {
+      return res
+        .status(404)
+        .json({ ok: false, state: "none", message: "Member not found." });
+    }
+    return res.status(404).render("errors/404");
+  }
   try {
     db.prepare(
       "INSERT INTO connections (sender_id, receiver_id, status) VALUES (?, ?, 'pending')"
@@ -842,9 +883,26 @@ app.post("/connect/:userId", requireAuth, (req, res) => {
       `${req.user.name} sent you a connection request.`,
       "/connections"
     );
+    if (wantsJson) {
+      return res.json({
+        ok: true,
+        state: "pending_sent",
+        message: `Connection request sent to ${other.name}.`,
+      });
+    }
     flashRedirect(res, "success", `Connection request sent to ${other.name}.`);
   } catch (err) {
-    // UNIQUE constraint failed -> a connection row already exists
+    // UNIQUE constraint failed -> a connection row already exists.
+    // Answer with the CURRENT status so the page can show the true state
+    // (e.g. a double-click: the first click already created the request,
+    // so the card should settle on "Request Sent", not an error look).
+    if (wantsJson) {
+      return res.json({
+        ok: false,
+        state: connectionStatus(db, req.user.id, otherId),
+        message: "You already have a connection with this member.",
+      });
+    }
     flashRedirect(res, "info", "You already have a connection with this member.");
   }
   res.redirect("/search");

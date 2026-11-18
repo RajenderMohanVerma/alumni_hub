@@ -2837,3 +2837,309 @@ body { overflow-x: clip; }
     .au-chip, .au-card { transition: none; }
     .au-chip:hover, .au-card:hover { transform: none; }
 }
+
+/* ==========================================================================
+   MEMBERS
+   The Member Directory page (views/search.ejs): header band with count
+   chip, a raised live-search card, role filter pills with per-role
+   counts, and member cards v2 (context line, skill chips, clamped bio,
+   in-place connect action with toasts). All classes are prefixed .mem-
+   so no other page is affected.
+   ========================================================================== */
+
+/* ---------- Page head ---------- */
+.mem-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.1rem;
+}
+
+.mem-count-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: linear-gradient(120deg, var(--ah-primary-dark), var(--ah-primary) 60%, var(--ah-sky));
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+}
+
+/* ---------- Live search card ---------- */
+.mem-search-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.mem-search-group .input-group-text {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: var(--ah-primary);
+    font-size: 1.05rem;
+}
+
+.mem-search-group .form-control {
+    border-color: #e2e8f0;
+}
+
+.mem-search-group .form-control:focus {
+    border-color: var(--ah-primary);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+}
+
+/* ---------- Controls: role pills + sort ---------- */
+.mem-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.mem-pills {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.mem-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+        background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mem-pill:hover {
+    border-color: var(--ah-primary);
+    color: var(--ah-primary);
+    transform: translateY(-1px);
+}
+
+.mem-pill.active {
+    background: linear-gradient(120deg, var(--ah-primary-dark), var(--ah-primary) 60%, var(--ah-sky));
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+}
+
+.mem-pill-count {
+    background: rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.mem-pill.active .mem-pill-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.mem-sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mem-sort {
+    width: auto;
+    border-radius: 0.6rem;
+    border-color: #cbd5e1;
+    font-weight: 500;
+}
+
+/* ---------- Member cards v2 ---------- */
+#cardGrid .filter-item.reveal {
+    /* staggered entrance: each card waits a beat longer than the last
+       (the template sets --i per card, cycling 0..8) */
+    transition-delay: calc(var(--i, 0) * 45ms);
+}
+
+.mem-card {
+    border: 1px solid #e8edf3;
+    border-radius: 1rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.mem-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.13);
+}
+
+.mem-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px #dbeafe, 0 4px 10px rgba(15, 23, 42, 0.12);
+    flex-shrink: 0;
+}
+
+.mem-id .card-title {
+    font-size: 1.05rem;
+}
+
+.mem-context {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.mem-context i {
+    color: var(--ah-primary);
+}
+
+.mem-email {
+    font-size: 0.85rem;
+    color: #64748b;
+    overflow-wrap: anywhere;
+}
+
+.mem-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.mem-chip {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    border-radius: 999px;
+    padding: 0.12rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.mem-chip-more {
+    background: #eef2ff;
+    border-color: #e0e7ff;
+    color: #4338ca;
+}
+
+.mem-bio {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* ---------- Card footer actions ---------- */
+.mem-actions {
+    display: flex;
+    gap: 0.5rem;
+    background: #ffffff;
+    border-top: 1px solid #eef2f7;
+    padding: 0.8rem 1rem;
+}
+
+.mem-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    border-radius: 0.6rem;
+    white-space: nowrap;
+}
+
+.mem-action-view {
+    flex: 1 1 auto;
+}
+
+.mem-action-form {
+    display: flex;
+}
+
+.mem-action-form .mem-action {
+    flex: 1;
+}
+
+/* ---------- No results (live search) ---------- */
+.mem-noresults {
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 1rem;
+    color: #64748b;
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-top: 0.5rem;
+}
+
+.mem-noresults > i {
+    font-size: 1.6rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* ---------- In-place action toasts ---------- */
+.mem-toast-box {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1090;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: min(92vw, 360px);
+}
+
+.mem-toast-box .toast {
+    width: 100%;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+    animation: mem-toast-in 0.25s ease;
+}
+
+@keyframes mem-toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Members on small screens ---------- */
+@media (max-width: 991.98px) {
+    /* keep toasts clear of the logged-in mobile bottom navigation */
+    .mem-toast-box { bottom: 76px; }
+}
+
+@media (max-width: 575.98px) {
+    .mem-controls { flex-direction: column; align-items: stretch; }
+    .mem-sort-wrap { justify-content: space-between; }
+    .mem-actions { flex-direction: column; }
+    .mem-actions .mem-action,
+    .mem-actions .mem-action-form { width: 100%; }
+    .mem-action { min-height: 44px; }
+    .mem-toast-box { left: 1rem; right: 1rem; max-width: none; }
+}
+
+/* ---------- Members: reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .mem-card, .mem-pill { transition: none; }
+    .mem-card:hover, .mem-pill:hover { transform: none; }
+    #cardGrid .filter-item.reveal { transition-delay: 0ms; }
+    .mem-toast-box .toast { animation: none; }
+}

@@ -11,6 +11,7 @@
      8. Members page: sort the cards (Name A-Z / Newest first)
      9. Mobile bottom navigation: highlight the current section
     10. PWA: register the service worker + "Install the app" banner
+    11. Members page: connection requests sent in place (fetch + toast)
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -322,5 +323,103 @@ document.addEventListener("DOMContentLoaded", function () {
                 hideBanner();
             });
         }
+    }
+
+    // 11) Members page: send connection requests in place ---------------------
+    // A .js-connect-form (Member Directory cards) is submitted with fetch
+    // instead of a full page post, so clicking "Connect" no longer reloads
+    // /search and throws the user back to the top of the page, losing the
+    // scroll position, the typed search text and the sort order. The
+    // server answers these requests with JSON (see POST /connect in
+    // app.js); without JS the same form posts + redirects as it always has.
+    var connectForms = document.querySelectorAll(".js-connect-form");
+    if (connectForms.length) {
+        // The exact markup the template renders for a sent request, so the
+        // morphed button is identical to what a fresh page load would show.
+        var SENT_BUTTON =
+            '<button type="button" class="btn btn-secondary mem-action" disabled>' +
+            '<i class="bi bi-check-lg"></i> Request Sent</button>';
+
+        function memToast(type, message) {
+            var box = document.getElementById("memToastBox");
+            if (!box) {
+                box = document.createElement("div");
+                box.id = "memToastBox";
+                box.className = "mem-toast-box";
+                box.setAttribute("aria-live", "polite");
+                document.body.appendChild(box);
+            }
+            var el = document.createElement("div");
+            el.className =
+                "toast align-items-center text-bg-" + type + " border-0";
+            el.setAttribute("role", "alert");
+            el.setAttribute("aria-live", "assertive");
+            el.innerHTML =
+                '<div class="d-flex"><div class="toast-body"></div>' +
+                '<button type="button" class="btn-close btn-close-white me-2 m-auto"' +
+                ' data-bs-dismiss="toast" aria-label="Close"></button></div>';
+            el.querySelector(".toast-body").textContent = message;
+            box.appendChild(el);
+            var toast = new bootstrap.Toast(el, { delay: 4000 });
+            el.addEventListener("hidden.bs.toast", function () {
+                el.remove();
+            });
+            toast.show();
+        }
+
+        function settleAsSent(form) {
+            var holder = document.createElement("div");
+            // A form may supply its own sent-state markup (e.g. the profile
+            // page, whose button styling differs from the Members cards).
+            holder.innerHTML = form.getAttribute("data-sent-html") || SENT_BUTTON;
+            form.replaceWith(holder.firstChild);
+        }
+
+        connectForms.forEach(function (form) {
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                var button = form.querySelector("button[type=submit]");
+                if (!button || button.disabled) return;
+                var name = form.getAttribute("data-name") || "member";
+                var original = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML =
+                    '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Sending…';
+
+                fetch(form.action, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "X-Requested-With": "fetch",
+                        "Accept": "application/json"
+                    }
+                }).then(function (response) {
+                    return response.json().catch(function () { return null; });
+                }).then(function (data) {
+                    if (data && data.state === "pending_sent") {
+                        // Success — or a duplicate submit where the first
+                        // click already sent the request: either way the
+                        // true state is "Request Sent", so settle on it.
+                        settleAsSent(form);
+                        if (data.ok) {
+                            memToast("success", "Request sent to " + name);
+                        } else {
+                            memToast("info", data.message || "Request already sent.");
+                        }
+                    } else {
+                        button.disabled = false;
+                        button.innerHTML = original;
+                        memToast("danger",
+                            (data && data.message) ||
+                            "Could not send the request. Please try again.");
+                    }
+                }).catch(function () {
+                    button.disabled = false;
+                    button.innerHTML = original;
+                    memToast("danger",
+                        "Could not send the request. Please try again.");
+                });
+            });
+        });
     }
 });
