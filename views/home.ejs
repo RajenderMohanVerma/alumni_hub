@@ -1,0 +1,142 @@
+<%- include('partials/header', { title: 'Home' }) %>
+
+<!-- ================= HERO ================= -->
+<section class="hero rounded-4 text-white p-4 p-md-5 mb-4">
+  <div class="row align-items-center">
+    <div class="col-lg-8">
+      <h1 class="display-5 fw-bold">Welcome to Alumni Hub</h1>
+      <p class="lead mb-4">
+        One place where <strong>Students</strong>, <strong>Alumni</strong> and
+        <strong>Faculty</strong> stay connected — find mentors, share jobs,
+        chat with batchmates and never miss a college announcement.
+      </p>
+      <% if (currentUser) { %>
+        <a href="/dashboard" class="btn btn-light btn-lg fw-semibold me-2">
+          <i class="bi bi-speedometer2"></i> Go to Dashboard
+        </a>
+        <a href="/search" class="btn btn-outline-light btn-lg">
+          <i class="bi bi-people"></i> Find Members
+        </a>
+      <% } else { %>
+        <a href="/register" class="btn btn-light btn-lg fw-semibold me-2">
+          <i class="bi bi-person-plus"></i> Join Now
+        </a>
+        <a href="/login" class="btn btn-outline-light btn-lg">
+          <i class="bi bi-box-arrow-in-right"></i> Login
+        </a>
+      <% } %>
+    </div>
+    <div class="col-lg-4 text-center d-none d-lg-block">
+      <i class="bi bi-mortarboard-fill hero-icon"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATISTICS ================= -->
+<section class="row g-3 mb-5 text-center">
+  <div class="col-6 col-md-3 reveal">
+    <div class="card p-3"><h3 class="text-primary mb-0"><span class="counter" data-count="<%= stats.students %>"><%= stats.students %></span></h3>
+        <small class="text-muted">Students</small></div>
+  </div>
+  <div class="col-6 col-md-3 reveal">
+    <div class="card p-3"><h3 class="text-success mb-0"><span class="counter" data-count="<%= stats.alumni %>"><%= stats.alumni %></span></h3>
+        <small class="text-muted">Alumni</small></div>
+  </div>
+  <div class="col-6 col-md-3 reveal">
+    <div class="card p-3"><h3 class="mb-0" style="color:#7c3aed;"><span class="counter" data-count="<%= stats.faculty %>"><%= stats.faculty %></span></h3>
+        <small class="text-muted">Faculty</small></div>
+  </div>
+  <div class="col-6 col-md-3 reveal">
+    <div class="card p-3"><h3 class="text-warning mb-0"><span class="counter" data-count="<%= stats.jobs %>"><%= stats.jobs %></span></h3>
+        <small class="text-muted">Jobs Posted</small></div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="mb-5">
+  <h2 class="fw-bold text-center mb-1">What can you do here?</h2>
+  <p class="text-center text-muted mb-4">Simple features, made for everyday campus use.</p>
+  <div class="row g-3">
+    <div class="col-md-4 reveal">
+      <div class="card h-100 shadow-sm feature-card">
+        <div class="card-body">
+          <i class="bi bi-people feature-icon text-primary"></i>
+          <h5 class="card-title fw-semibold">Connect with Members</h5>
+          <p class="card-text text-muted">
+            Search the member directory, view profiles and send connection
+            requests to seniors, juniors and teachers.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 reveal">
+      <div class="card h-100 shadow-sm feature-card">
+        <div class="card-body">
+          <i class="bi bi-briefcase feature-icon text-success"></i>
+          <h5 class="card-title fw-semibold">Jobs &amp; Internships</h5>
+          <p class="card-text text-muted">
+            Alumni post openings from their companies. Students apply in one
+            click and track the status of every application.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 reveal">
+      <div class="card h-100 shadow-sm feature-card">
+        <div class="card-body">
+          <i class="bi bi-chat-dots feature-icon text-warning"></i>
+          <h5 class="card-title fw-semibold">Chat &amp; Announcements</h5>
+          <p class="card-text text-muted">
+            Message any member directly, and read faculty announcements
+            about events, meets and important notices.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="text-center mt-4">
+    <a href="/services" class="btn btn-outline-primary">
+      <i class="bi bi-grid"></i> See all services
+    </a>
+  </div>
+</section>
+
+<!-- ================= LATEST JOBS ================= -->
+<section>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold mb-0">Latest Jobs</h2>
+    <a href="/jobs" class="btn btn-outline-primary btn-sm">View all jobs</a>
+  </div>
+  <% if (latestJobs.length) { %>
+    <div class="row g-3">
+      <% latestJobs.forEach(function(job) { %>
+      <div class="col-md-4 reveal">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title fw-semibold"><%= job.title %></h5>
+            <p class="card-subtitle text-muted mb-2">
+              <i class="bi bi-building"></i> <%= job.company %>
+              <% if (job.location) { %> · <i class="bi bi-geo-alt"></i> <%= job.location %><% } %>
+            </p>
+            <p class="card-text text-muted small">
+              <%= job.description ? truncate(job.description, 110) : 'No description provided.' %>
+            </p>
+          </div>
+          <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <span class="badge bg-light text-dark border">
+              <i class="bi bi-calendar-event"></i> <%= dateformat(job.deadline) %>
+            </span>
+            <a href="/jobs/<%= job.id %>" class="btn btn-primary btn-sm">Details</a>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="alert alert-info">
+      No jobs posted yet. Alumni can post the first job from the Jobs page.
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

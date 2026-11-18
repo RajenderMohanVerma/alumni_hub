@@ -1,0 +1,126 @@
+<%- include('partials/header', { title: 'Services' }) %>
+
+<div class="text-center mb-5 reveal">
+  <h1 class="fw-bold">Our Services</h1>
+  <p class="lead text-muted mx-auto" style="max-width:640px">
+    Everything the institute community needs to stay connected — free for
+    every student, alumnus and faculty member of the institute.
+  </p>
+</div>
+
+<div class="row g-4">
+  <!-- Service 1 -->
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="card h-100 shadow-sm feature-card">
+      <div class="card-body">
+        <i class="bi bi-people feature-icon text-primary"></i>
+        <h5 class="fw-semibold">Member Directory</h5>
+        <p class="text-muted">
+          Search the complete directory of students, alumni and faculty.
+          Filter by role, view rich profiles with skills, company and
+          experience details.
+        </p>
+        <a href="/search" class="btn btn-outline-primary btn-sm">Browse members</a>
+      </div>
+    </div>
+  </div>
+  <!-- Service 2 -->
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="card h-100 shadow-sm feature-card">
+      <div class="card-body">
+        <i class="bi bi-person-plus feature-icon text-success"></i>
+        <h5 class="fw-semibold">Connections &amp; Networking</h5>
+        <p class="text-muted">
+          Send connection requests to seniors, batchmates and teachers.
+          Build your professional network before you even graduate.
+        </p>
+        <a href="/connections" class="btn btn-outline-success btn-sm">My connections</a>
+      </div>
+    </div>
+  </div>
+  <!-- Service 3 -->
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="card h-100 shadow-sm feature-card">
+      <div class="card-body">
+        <i class="bi bi-briefcase feature-icon text-danger"></i>
+        <h5 class="fw-semibold">Job Board</h5>
+        <p class="text-muted">
+          Alumni post jobs and internships from their companies. Students
+          apply in one click and track every application's status —
+          Applied, Shortlisted or Rejected.
+        </p>
+        <a href="/jobs" class="btn btn-outline-danger btn-sm">View jobs</a>
+      </div>
+    </div>
+  </div>
+  <!-- Service 4 -->
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="card h-100 shadow-sm feature-card">
+      <div class="card-body">
+        <i class="bi bi-chat-dots feature-icon text-warning"></i>
+        <h5 class="fw-semibold">One-to-One Messaging</h5>
+        <p class="text-muted">
+          Chat directly with any member — ask a senior about placements,
+          or a teacher about an event. Unread messages show a badge in
+          the navbar.
+        </p>
+        <a href="/chat" class="btn btn-outline-warning btn-sm">Open chat</a>
+      </div>
+    </div>
+  </div>
+  <!-- Service 5 -->
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="card h-100 shadow-sm feature-card">
+      <div class="card-body">
+        <i class="bi bi-megaphone feature-icon text-info"></i>
+        <h5 class="fw-semibold">Announcements</h5>
+        <p class="text-muted">
+          Faculty publish official announcements — alumni meets, guest
+          lectures, deadlines and events — in one place everyone checks.
+        </p>
+        <a href="/announcements" class="btn btn-outline-info btn-sm">Read announcements</a>
+      </div>
+    </div>
+  </div>
+  <!-- Service 6 -->
+  <div class="col-md-6 col-lg-4 reveal">
+    <div class="card h-100 shadow-sm feature-card">
+      <div class="card-body">
+        <i class="bi bi-bell feature-icon text-secondary"></i>
+        <h5 class="fw-semibold">Smart Notifications</h5>
+        <p class="text-muted">
+          Get notified when someone connects with you, a new job is
+          posted, or your application status changes — nothing important
+          is missed.
+        </p>
+        <a href="/notifications" class="btn btn-outline-secondary btn-sm">My notifications</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= HOW IT WORKS ================= -->
+<div class="card shadow-sm mt-5 reveal">
+  <div class="card-body p-4">
+    <h3 class="fw-bold text-center mb-4">How it works</h3>
+    <div class="row text-center g-4">
+      <div class="col-md-4">
+        <div class="display-6 text-primary fw-bold">1</div>
+        <h6 class="fw-semibold mt-2">Register with your role</h6>
+        <p class="text-muted small mb-0">Sign up as Student, Alumni or Faculty and complete your profile.</p>
+      </div>
+      <div class="col-md-4">
+        <div class="display-6 text-primary fw-bold">2</div>
+        <h6 class="fw-semibold mt-2">Connect &amp; explore</h6>
+        <p class="text-muted small mb-0">Find members, send requests, chat and read announcements.</p>
+      </div>
+      <div class="col-md-4">
+        <div class="display-6 text-primary fw-bold">3</div>
+        <h6 class="fw-semibold mt-2">Grow together</h6>
+        <p class="text-muted small mb-0">Apply for jobs, mentor juniors and keep the community strong.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

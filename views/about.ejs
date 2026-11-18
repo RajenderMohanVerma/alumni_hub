@@ -1,0 +1,138 @@
+<%- include('partials/header', { title: 'About' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+
+    <!-- ================= INTRO ================= -->
+    <div class="text-center mb-5 reveal">
+      <i class="bi bi-mortarboard-fill text-primary" style="font-size:3.5rem"></i>
+      <h1 class="fw-bold mt-2">About Alumni Hub</h1>
+      <p class="lead text-muted">
+        A simple web platform that keeps the three pillars of an institute —
+        Students, Alumni and Faculty — connected in one place.
+      </p>
+    </div>
+
+    <!-- ================= PROBLEM & SOLUTION ================= -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6 reveal">
+        <div class="card h-100 shadow-sm border-danger-subtle">
+          <div class="card-body">
+            <h5 class="fw-semibold"><i class="bi bi-exclamation-circle text-danger"></i> The Problem</h5>
+            <p class="text-muted mb-0">
+              After graduation, students lose touch with their college.
+              Juniors cannot find seniors for guidance, alumni cannot share
+              job openings easily, and faculty announcements get lost in
+              scattered WhatsApp groups and notice boards.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 reveal">
+        <div class="card h-100 shadow-sm border-success-subtle">
+          <div class="card-body">
+            <h5 class="fw-semibold"><i class="bi bi-check-circle text-success"></i> The Solution</h5>
+            <p class="text-muted mb-0">
+              Alumni Hub brings everyone onto one platform: a member
+              directory, connections, direct chat, a job board where alumni
+              post openings and students apply, and a single announcement
+              board managed by faculty.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= WHO USES IT ================= -->
+    <h3 class="fw-bold mb-3">Who uses Alumni Hub?</h3>
+    <div class="row g-3 mb-5">
+      <div class="col-md-4 reveal">
+        <div class="card h-100 shadow-sm feature-card text-center">
+          <div class="card-body">
+            <i class="bi bi-mortarboard feature-icon text-primary"></i>
+            <h5 class="fw-semibold">Students</h5>
+            <p class="text-muted small mb-0">
+              Find mentors, connect with alumni, apply for jobs and
+              internships, and stay updated with announcements.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="card h-100 shadow-sm feature-card text-center">
+          <div class="card-body">
+            <i class="bi bi-award feature-icon text-success"></i>
+            <h5 class="fw-semibold">Alumni</h5>
+            <p class="text-muted small mb-0">
+              Give back to the institute — post jobs, guide juniors over
+              chat, and keep the batch network alive.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="card h-100 shadow-sm feature-card text-center">
+          <div class="card-body">
+            <i class="bi bi-person-video3 feature-icon text-warning"></i>
+            <h5 class="fw-semibold">Faculty</h5>
+            <p class="text-muted small mb-0">
+              Publish announcements for events and meets, and stay in
+              touch with both current and passed-out students.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODULES ================= -->
+    <h3 class="fw-bold mb-3">Main Modules</h3>
+    <div class="card shadow-sm mb-5 reveal">
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item"><i class="bi bi-person-lock text-primary me-2"></i><strong>User Management</strong> — registration, login, role-based access and profiles with photo upload.</li>
+        <li class="list-group-item"><i class="bi bi-people text-primary me-2"></i><strong>Member Directory</strong> — search and filter students, alumni and faculty.</li>
+        <li class="list-group-item"><i class="bi bi-person-plus text-primary me-2"></i><strong>Connections</strong> — send, accept or reject connection requests.</li>
+        <li class="list-group-item"><i class="bi bi-chat-dots text-primary me-2"></i><strong>Messaging</strong> — simple one-to-one chat with unread badges.</li>
+        <li class="list-group-item"><i class="bi bi-briefcase text-primary me-2"></i><strong>Job Board</strong> — alumni post jobs; students apply and track status.</li>
+        <li class="list-group-item"><i class="bi bi-megaphone text-primary me-2"></i><strong>Announcements</strong> — faculty notices for the whole institute.</li>
+        <li class="list-group-item"><i class="bi bi-shield-lock text-primary me-2"></i><strong>Admin Panel</strong> — user/job management with charts and statistics.</li>
+      </ul>
+    </div>
+
+    <!-- ================= TECHNOLOGY ================= -->
+    <h3 class="fw-bold mb-3">Technology Used</h3>
+    <div class="card shadow-sm mb-4 reveal">
+      <div class="card-body">
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">JavaScript</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">Node.js</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">Express</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">EJS Templates</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">Python + Flask (Auth Service)</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">SQLite Database</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">Bootstrap 5</span>
+        <span class="badge bg-primary-subtle text-primary-emphasis fs-6 me-1 mb-1">Chart.js</span>
+        <p class="text-muted mt-3 mb-0">
+          Alumni Hub follows a small <strong>hybrid architecture</strong>: the main
+          application is built with Node.js and Express, while login, registration
+          and password management run in a small Python (Flask) authentication
+          service. Both share one SQLite database, and passwords are stored only
+          as salted scrypt hashes — never as plain text.
+        </p>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <% if (!currentUser) { %>
+      <a href="/register" class="btn btn-primary btn-lg fw-semibold">
+        <i class="bi bi-person-plus"></i> Create your free account
+      </a>
+      <% } else { %>
+      <a href="/dashboard" class="btn btn-primary btn-lg fw-semibold">
+        <i class="bi bi-speedometer2"></i> Go to your dashboard
+      </a>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<%- include('partials/footer') %>

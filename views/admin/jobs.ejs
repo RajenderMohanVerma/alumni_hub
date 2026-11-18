@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Manage Jobs' }) %>
+
+<h2 class="fw-bold mb-4"><i class="bi bi-briefcase"></i> Manage Jobs</h2>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th>Company</th>
+          <th>Posted by</th>
+          <th>Deadline</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% jobs.forEach(function(job) { %>
+        <tr>
+          <td>
+            <a href="/jobs/<%= job.id %>" class="fw-semibold text-decoration-none"><%= job.title %></a>
+            <div class="text-muted small"><%= datetimeformat(job.created_at) %></div>
+          </td>
+          <td><%= job.company %></td>
+          <td><%= job.poster_name %></td>
+          <td><%= dateformat(job.deadline) %></td>
+          <td class="text-end">
+            <form method="post" action="/admin/jobs/<%= job.id %>/delete" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger js-confirm" type="submit"
+                      data-confirm="Delete this job?">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (!jobs.length) { %>
+        <tr><td colspan="5" class="text-center text-muted py-4">No jobs posted yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

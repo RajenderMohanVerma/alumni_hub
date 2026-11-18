@@ -1,0 +1,75 @@
+<%- include('partials/header', { title: job.title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <a href="/jobs" class="btn btn-outline-secondary btn-sm mb-3">
+      <i class="bi bi-arrow-left"></i> Back to Jobs
+    </a>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="fw-bold mb-1"><%= job.title %></h3>
+        <p class="text-muted mb-3">
+          <i class="bi bi-building"></i> <%= job.company %>
+          <% if (job.location) { %> · <i class="bi bi-geo-alt"></i> <%= job.location %><% } %>
+          <% if (job.salary) { %> · <i class="bi bi-cash-stack"></i> <%= job.salary %><% } %>
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-calendar-event"></i> Apply by: <%= dateformat(job.deadline) %>
+          </span>
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-clock"></i> Posted: <%= datetimeformat(job.created_at) %>
+          </span>
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-person"></i> Posted by:
+            <a href="/profile/<%= job.alumni_id %>"><%= job.poster_name %></a>
+          </span>
+        </div>
+
+        <h5 class="fw-semibold">Job Description</h5>
+        <p style="white-space:pre-line"><%= job.description || 'No description provided.' %></p>
+
+        <hr>
+
+        <% if (currentUser.role === 'student') { %>
+          <% if (applied) { %>
+            <div class="alert alert-success mb-0">
+              <i class="bi bi-check-circle"></i>
+              You have already applied for this job.
+              <a href="/my-applications" class="alert-link">Track your application</a>
+            </div>
+          <% } else { %>
+            <h5 class="fw-semibold">Apply for this job</h5>
+            <form method="post" action="/jobs/<%= job.id %>/apply">
+              <div class="mb-2">
+                <textarea class="form-control" name="cover_note" rows="3"
+                          placeholder="Cover note (optional) - write 2-3 lines about why you fit this role"></textarea>
+              </div>
+              <button class="btn btn-primary" type="submit">
+                <i class="bi bi-send"></i> Submit Application
+              </button>
+            </form>
+          <% } %>
+        <% } else if (currentUser.role === 'alumni' && job.alumni_id === currentUser.id) { %>
+          <div class="d-flex gap-2">
+            <a href="/jobs/<%= job.id %>/applicants" class="btn btn-primary">
+              <i class="bi bi-people"></i> View Applicants
+            </a>
+            <a href="/jobs/<%= job.id %>/edit" class="btn btn-outline-secondary">
+              <i class="bi bi-pencil"></i> Edit Job
+            </a>
+          </div>
+        <% } else { %>
+          <p class="text-muted mb-0">
+            <i class="bi bi-info-circle"></i>
+            Only students can apply for jobs.
+          </p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

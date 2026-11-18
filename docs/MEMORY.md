@@ -7,12 +7,12 @@ limitations. Read this before making changes.
 
 | Decision | Why |
 |----------|-----|
-| **Flask (not Django / Node)** | Smallest learning curve; routing, templating and forms in one file-set; perfect size for a project that must be explained in a viva. |
-| **Raw `sqlite3` (no SQLAlchemy ORM)** | Real SQL is visible in the code — easy to demonstrate and answer questions on. SQLite needs zero installation and the whole DB is one file. |
-| **Server-rendered Jinja2 templates (no React/API)** | Keeps the project a true monolith: one app to run, one place to debug. |
+| **Hybrid: Express (JS) main app + Flask auth service** | Converted on request so most of the codebase is JavaScript. Python is kept ONLY for authentication, because the stored password hashes are Werkzeug scrypt and only Werkzeug can verify them. The two services share one SQLite file and communicate through a signed-token handoff (HMAC-SHA256, 6-hour expiry, httpOnly cookie). See [ARCHITECTURE.md](ARCHITECTURE.md). |
+| **Raw SQL (no ORM)** | Real SQL is visible in the code (`better-sqlite3` in JS, `sqlite3` in Python) — easy to demonstrate and answer questions on. SQLite needs zero installation and the whole DB is one file. |
+| **Server-rendered templates (no React/API)** | EJS templates with header/footer partials in the main app, Jinja2 in the auth service — same pages, same Bootstrap design as the original monolith. |
 | **No OTP / email verification** | Needs an SMTP/app-password setup and adds failure modes in a demo. Registration is direct; the admin can block/delete misuse. Deliberately out of scope. |
 | **No WebSockets for chat** | Chat is a simple form POST + page load (with read/unread tracking). Real-time sockets would need Socket.IO + a different hosting model and are hard to justify at this project's level. |
-| **One `app.py` for all routes** | Grouped, commented sections (AUTH / JOBS / CHAT / ADMIN…) make the whole flow readable top-to-bottom. `models.py` holds only DB code, `config.py` only settings. |
+| **One `app.js` for all main routes** | Grouped, commented sections (PUBLIC / JOBS / CHAT / ADMIN…) make the whole flow readable top-to-bottom. `models.js` holds only DB code, `config.js` only settings. The auth service is a single small `auth.py`. |
 | **Separate profile table per role** | Students, alumni and faculty genuinely have different fields; three small tables are clearer than one wide table full of NULLs. |
 | **Admin is seed-only** | Admins are never created from the public register form — `seed.py` creates the single admin account. |
 | **Bootstrap 5 via CDN** | Responsive UI with almost no custom CSS; the custom theme lives in one `style.css`. |
@@ -55,10 +55,23 @@ limitations. Read this before making changes.
    animations, count-up statistics, live search filtering, admin inbox for
    contact messages (`contact_messages` becomes the 11th table), and this
    `docs/` folder + a professional main README.
+8. **Hybrid conversion (JavaScript + Python auth)** — The all-Python app
+   was converted in place: the main application is now Node.js/Express
+   (`app.js`, `models.js`, `config.js`, `views/`, `public/`, `seed.js`),
+   and Python remains only as a small Flask **auth service**
+   (`auth_service/auth.py`, port 5001) for login/register/change-password,
+   since password hashes are Werkzeug scrypt. Login works by signed-token
+   handoff (see [ARCHITECTURE.md](ARCHITECTURE.md)). `seed.py` is kept
+   unchanged as the canonical demo-data record; `seed.js` creates
+   identical data (it writes Werkzeug-format scrypt hashes using Node's
+   `crypto.scryptSync`, which Werkzeug verifies). The existing
+   `alumni_hub.db` kept working unchanged. The old all-Python version
+   remains in this repo's git history.
 
 ## Demo Credentials
 
-Created by `seed.py` (and auto-seeded on Vercel cold starts):
+Created by the seed scripts — `node seed.js`, or `python seed.py`
+(identical data; also auto-seeded on Vercel cold starts):
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -85,10 +98,15 @@ Created by `seed.py` (and auto-seeded on Vercel cold starts):
   no typing indicator or push delivery.
 - **SQLite concurrency** — Fine for a class demo; not meant for heavy
   multi-user production traffic.
-- **Single admin account** — Created by `seed.py`; there is no UI to create
+- **Single admin account** — Created by the seed; there is no UI to create
   more admins.
 - **Uploads are local files** — Profile pictures live in `uploads/`
   (on Vercel: `/tmp/uploads`, equally temporary).
-- **Default `SECRET_KEY`** — A placeholder value is in `config.py` for
-  local use; real deployments should set the `SECRET_KEY` environment
-  variable (see [DEPLOYMENT.md](DEPLOYMENT.md)).
+- **Two servers must both run** — The main app (Node, port 3000) and the
+  auth service (Python, port 5001). If the auth service is down, pages
+  still open but nobody can log in.
+- **Default `AUTH_SECRET`** — A placeholder shared secret (used to sign
+  login tokens) is in `config.js` and `auth_service/auth.py` for local
+  use; real deployments should set the `AUTH_SECRET` environment
+  variable — to the SAME value in both services (see
+  [DEPLOYMENT.md](DEPLOYMENT.md)).

@@ -1,0 +1,121 @@
+<%- include('partials/header', { title: 'Edit Profile' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="fw-bold mb-1"><i class="bi bi-pencil-square"></i> Edit Profile</h3>
+        <p class="text-muted">Keep your details updated so others can find and connect with you.</p>
+
+        <form method="post" action="/profile/edit" enctype="multipart/form-data">
+          <!-- Basic details -->
+          <h5 class="fw-semibold mt-3">Basic details</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="name">Full name *</label>
+              <input class="form-control" id="name" name="name" required
+                     value="<%= currentUser.name %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="phone">Phone</label>
+              <input class="form-control" id="phone" name="phone"
+                     value="<%= currentUser.phone || '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email (cannot be changed)</label>
+              <input class="form-control" value="<%= currentUser.email %>" disabled>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="profile_pic">Profile picture (PNG/JPG, max 2 MB)</label>
+              <input class="form-control" type="file" id="profile_pic" name="profile_pic" accept=".png,.jpg,.jpeg">
+            </div>
+          </div>
+
+          <!-- Role-specific details -->
+          <% if (currentUser.role === 'student') { %>
+          <h5 class="fw-semibold mt-4">Student details</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="course">Course</label>
+              <input class="form-control" id="course" name="course"
+                     placeholder="e.g. B.Tech / MCA" value="<%= profile ? (profile.course || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="branch">Branch</label>
+              <input class="form-control" id="branch" name="branch"
+                     placeholder="e.g. Computer Science" value="<%= profile ? (profile.branch || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="year">Year</label>
+              <input class="form-control" id="year" name="year"
+                     placeholder="e.g. 3rd Year" value="<%= profile ? (profile.year || '') : '' %>">
+            </div>
+          </div>
+          <% } else if (currentUser.role === 'alumni') { %>
+          <h5 class="fw-semibold mt-4">Alumni details</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="company">Company</label>
+              <input class="form-control" id="company" name="company"
+                     placeholder="e.g. TCS" value="<%= profile ? (profile.company || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="designation">Designation</label>
+              <input class="form-control" id="designation" name="designation"
+                     placeholder="e.g. Software Engineer" value="<%= profile ? (profile.designation || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="experience">Experience</label>
+              <input class="form-control" id="experience" name="experience"
+                     placeholder="e.g. 3 years" value="<%= profile ? (profile.experience || '') : '' %>">
+            </div>
+          </div>
+          <% } else if (currentUser.role === 'faculty') { %>
+          <h5 class="fw-semibold mt-4">Faculty details</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="department">Department</label>
+              <input class="form-control" id="department" name="department"
+                     placeholder="e.g. Computer Science" value="<%= profile ? (profile.department || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="designation">Designation</label>
+              <input class="form-control" id="designation" name="designation"
+                     placeholder="e.g. Professor" value="<%= profile ? (profile.designation || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="qualification">Qualification</label>
+              <input class="form-control" id="qualification" name="qualification"
+                     placeholder="e.g. PhD" value="<%= profile ? (profile.qualification || '') : '' %>">
+            </div>
+          </div>
+          <% } %>
+
+          <!-- Common details -->
+          <div class="row g-3 mt-1">
+            <div class="col-12">
+              <label class="form-label" for="skills">Skills (comma separated)</label>
+              <input class="form-control" id="skills" name="skills"
+                     placeholder="e.g. Python, Java, HTML"
+                     value="<%= profile ? (profile.skills || '') : '' %>">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="bio">Bio / About me</label>
+              <textarea class="form-control" id="bio" name="bio" rows="3"
+                        placeholder="Write 2-3 lines about yourself..."><%= profile ? (profile.bio || '') : '' %></textarea>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-check-circle"></i> Save Changes
+            </button>
+            <a href="/profile/<%= currentUser.id %>" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

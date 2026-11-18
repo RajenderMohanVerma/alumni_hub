@@ -1,0 +1,106 @@
+<%- include('../partials/header', { title: 'Admin Dashboard' }) %>
+
+<h2 class="fw-bold mb-4"><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon"><i class="bi bi-people"></i></div>
+      <div><div class="stat-number"><%= counts.total_users %></div>
+      <div>Total Users</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-green">
+      <div class="stat-icon"><i class="bi bi-briefcase"></i></div>
+      <div><div class="stat-number"><%= counts.jobs %></div>
+      <div>Jobs</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-orange">
+      <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+      <div><div class="stat-number"><%= counts.applications %></div>
+      <div>Applications</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-purple">
+      <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
+      <div><div class="stat-number"><%= counts.announcements %></div>
+      <div>Announcements</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Chart: users by role -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="fw-semibold mb-3"><i class="bi bi-bar-chart"></i> Users by Role</h5>
+        <canvas id="roleChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+  <!-- Quick links -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="fw-semibold mb-3"><i class="bi bi-lightning"></i> Quick Actions</h5>
+        <div class="d-grid gap-2">
+          <a href="/admin/users" class="btn btn-outline-primary text-start">
+            <i class="bi bi-people"></i> Manage Users
+            <span class="badge bg-primary float-end"><%= counts.total_users %></span>
+          </a>
+          <a href="/admin/jobs" class="btn btn-outline-success text-start">
+            <i class="bi bi-briefcase"></i> Manage Jobs
+            <span class="badge bg-success float-end"><%= counts.jobs %></span>
+          </a>
+          <a href="/admin/messages" class="btn btn-outline-info text-start">
+            <i class="bi bi-envelope"></i> Contact Messages
+            <span class="badge bg-info float-end"><%= counts.contact_messages %></span>
+          </a>
+          <a href="/search" class="btn btn-outline-secondary text-start">
+            <i class="bi bi-search"></i> Member Directory
+          </a>
+          <a href="/announcements" class="btn btn-outline-warning text-start">
+            <i class="bi bi-megaphone"></i> Announcements
+            <span class="badge bg-warning text-dark float-end"><%= counts.announcements %></span>
+          </a>
+        </div>
+        <hr>
+        <p class="text-muted small mb-0">
+          Students: <strong><%= counts.students %></strong> ·
+          Alumni: <strong><%= counts.alumni %></strong> ·
+          Faculty: <strong><%= counts.faculty %></strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js (CDN) + the bar chart for users by role -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const ctx = document.getElementById('roleChart');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Students', 'Alumni', 'Faculty'],
+      datasets: [{
+        label: 'Number of users',
+        data: [<%= counts.students %>, <%= counts.alumni %>, <%= counts.faculty %>],
+        backgroundColor: ['#0d6efd', '#198754', '#ffc107'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

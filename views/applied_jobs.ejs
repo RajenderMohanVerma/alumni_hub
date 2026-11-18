@@ -1,0 +1,43 @@
+<%- include('partials/header', { title: 'My Applications' }) %>
+
+<h2 class="fw-bold mb-4"><i class="bi bi-file-earmark-text"></i> My Applications</h2>
+
+<% if (applications.length) { %>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Job</th>
+          <th>Company</th>
+          <th>Applied on</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% applications.forEach(function(a) { %>
+        <tr>
+          <td>
+            <a href="/jobs/<%= a.job_id %>" class="fw-semibold text-decoration-none"><%= a.title %></a>
+            <% if (a.location) { %><div class="text-muted small"><i class="bi bi-geo-alt"></i> <%= a.location %></div><% } %>
+          </td>
+          <td><%= a.company %></td>
+          <td class="small"><%= datetimeformat(a.created_at) %></td>
+          <td>
+            <span class="badge bg-<%= a.status === 'Shortlisted' ? 'success' : (a.status === 'Rejected' ? 'danger' : 'secondary') %>">
+              <%= a.status %>
+            </span>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } else { %>
+<div class="alert alert-info">
+  You have not applied to any job yet. <a href="/jobs" class="alert-link">Browse jobs</a> and apply!
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,88 @@
+<%- include('partials/header', { title: 'Members' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+  <h2 class="fw-bold mb-0"><i class="bi bi-people"></i> Member Directory</h2>
+  <span class="badge bg-primary fs-6"><%= members.length %> members</span>
+</div>
+
+<!-- Live search: type to filter the cards instantly (see /js/main.js) -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input id="liveSearch" type="text" class="form-control"
+             placeholder="Start typing a name, email or skill — results filter live..."
+             autocomplete="off">
+    </div>
+  </div>
+</div>
+
+<!-- Role filter buttons -->
+<div class="btn-group mb-4" role="group" aria-label="Filter by role">
+  <a href="/search" class="btn btn-<%= !role ? 'primary' : 'outline-primary' %>">All</a>
+  <a href="/search?role=student" class="btn btn-<%= role === 'student' ? 'primary' : 'outline-primary' %>">Students</a>
+  <a href="/search?role=alumni" class="btn btn-<%= role === 'alumni' ? 'primary' : 'outline-primary' %>">Alumni</a>
+  <a href="/search?role=faculty" class="btn btn-<%= role === 'faculty' ? 'primary' : 'outline-primary' %>">Faculty</a>
+</div>
+
+<% if (members.length) { %>
+<div class="row g-3" id="cardGrid">
+  <% members.forEach(function(m) { %>
+  <div class="col-md-6 col-lg-4 filter-item">
+    <div class="card h-100 shadow-sm member-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-2">
+          <img src="<%= avatarUrl(m) %>" alt="avatar" class="member-avatar">
+          <div>
+            <h5 class="card-title mb-0">
+              <a href="/profile/<%= m.id %>" class="text-decoration-none"><%= m.name %></a>
+            </h5>
+            <span class="badge bg-<%= m.role === 'student' ? 'primary' : (m.role === 'alumni' ? 'success' : 'warning text-dark') %>">
+              <%= capitalize(m.role) %>
+            </span>
+          </div>
+        </div>
+        <p class="card-text text-muted small mb-1">
+          <i class="bi bi-envelope"></i> <%= m.email %>
+        </p>
+        <% if (m.skills) { %>
+        <p class="card-text small mb-2">
+          <% m.skills.split(',').slice(0, 4).forEach(function(skill) { %>
+            <span class="badge bg-light text-dark border"><%= skill.trim() %></span>
+          <% }) %>
+        </p>
+        <% } %>
+        <% if (m.bio) { %>
+        <p class="card-text text-muted small"><%= truncate(m.bio, 90) %></p>
+        <% } %>
+      </div>
+      <div class="card-footer bg-white d-flex gap-2">
+        <a href="/profile/<%= m.id %>" class="btn btn-outline-primary btn-sm flex-grow-1">
+          <i class="bi bi-person"></i> View Profile
+        </a>
+        <% if (statuses[m.id] === 'none' || statuses[m.id] === 'rejected') { %>
+          <form method="post" action="/connect/<%= m.id %>">
+            <button class="btn btn-primary btn-sm" type="submit">
+              <i class="bi bi-person-plus"></i> Connect
+            </button>
+          </form>
+        <% } else if (statuses[m.id] === 'pending_sent') { %>
+          <button class="btn btn-secondary btn-sm" disabled>Request Sent</button>
+        <% } else if (statuses[m.id] === 'pending_received') { %>
+          <a href="/connections" class="btn btn-warning btn-sm">Respond</a>
+        <% } else if (statuses[m.id] === 'accepted') { %>
+          <a href="/chat/<%= m.id %>" class="btn btn-success btn-sm">
+            <i class="bi bi-chat-dots"></i> Chat
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+<p id="noResults" class="text-muted d-none">No member matches your search.</p>
+<% } else { %>
+<div class="alert alert-info">No members found.</div>
+<% } %>
+
+<%- include('partials/footer') %>

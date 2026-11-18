@@ -1,0 +1,59 @@
+<%- include('partials/header', { title: 'My Jobs' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="bi bi-briefcase"></i> Jobs Posted by Me</h2>
+  <a href="/jobs/new" class="btn btn-success">
+    <i class="bi bi-plus-circle"></i> Post a Job
+  </a>
+</div>
+
+<% if (jobs.length) { %>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th>Company</th>
+          <th>Deadline</th>
+          <th>Applicants</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% jobs.forEach(function(job) { %>
+        <tr>
+          <td>
+            <a href="/jobs/<%= job.id %>" class="fw-semibold text-decoration-none"><%= job.title %></a>
+            <div class="text-muted small"><%= datetimeformat(job.created_at) %></div>
+          </td>
+          <td><%= job.company %></td>
+          <td><%= dateformat(job.deadline) %></td>
+          <td><span class="badge bg-primary"><%= job.applicants %></span></td>
+          <td class="text-end">
+            <a href="/jobs/<%= job.id %>/applicants" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-people"></i> Applicants
+            </a>
+            <a href="/jobs/<%= job.id %>/edit" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <form method="post" action="/jobs/<%= job.id %>/delete" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger js-confirm" type="submit"
+                      data-confirm="Delete this job and all its applications?">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } else { %>
+<div class="alert alert-info">
+  You have not posted any job yet. Click <strong>Post a Job</strong> to create your first opening.
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

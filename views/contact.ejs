@@ -1,0 +1,69 @@
+<%- include('partials/header', { title: 'Contact' }) %>
+
+<div class="row g-4">
+  <!-- ================= CONTACT INFO ================= -->
+  <div class="col-lg-5">
+    <h1 class="fw-bold">Contact Us</h1>
+    <p class="text-muted">
+      Questions about your account, the alumni meet, or anything else?
+      Reach out — the Alumni Cell usually replies within 2 working days.
+    </p>
+    <div class="card shadow-sm mb-3 reveal">
+      <div class="card-body">
+        <ul class="list-unstyled mb-0">
+          <li class="mb-3"><i class="bi bi-geo-alt-fill text-primary me-2"></i><strong>Alumni Cell</strong><br>
+            <span class="text-muted">Main Campus, Institute Campus Road</span></li>
+          <li class="mb-3"><i class="bi bi-envelope-fill text-primary me-2"></i><strong>Email</strong><br>
+            <span class="text-muted">alumni@college.edu</span></li>
+          <li class="mb-3"><i class="bi bi-telephone-fill text-primary me-2"></i><strong>Phone</strong><br>
+            <span class="text-muted">+91 98765 43210</span></li>
+          <li><i class="bi bi-clock-fill text-primary me-2"></i><strong>Office hours</strong><br>
+            <span class="text-muted">Monday – Saturday, 9:00 AM – 5:00 PM</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="alert alert-info reveal">
+      <i class="bi bi-info-circle"></i>
+      Already a member? For account help you can also message the
+      <strong>Admin</strong> after logging in.
+    </div>
+  </div>
+
+  <!-- ================= CONTACT FORM ================= -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm reveal">
+      <div class="card-body p-4">
+        <h4 class="fw-semibold mb-3"><i class="bi bi-envelope-paper"></i> Send a message</h4>
+        <form method="post" action="/contact">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="name">Your name *</label>
+              <input class="form-control" id="name" name="name" required
+                     placeholder="e.g. Rahul Sharma">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="email">Your email *</label>
+              <input class="form-control" id="email" name="email" type="email" required
+                     placeholder="you@example.com">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="subject">Subject</label>
+              <input class="form-control" id="subject" name="subject"
+                     placeholder="What is this about?">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="message">Message *</label>
+              <textarea class="form-control" id="message" name="message" rows="5"
+                        required placeholder="Write your message..."></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary mt-3" type="submit">
+            <i class="bi bi-send"></i> Send Message
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

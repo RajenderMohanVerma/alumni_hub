@@ -1,0 +1,64 @@
+<%- include('partials/header', { title: 'Applicants' }) %>
+
+<a href="/my-jobs" class="btn btn-outline-secondary btn-sm mb-3">
+  <i class="bi bi-arrow-left"></i> Back to My Jobs
+</a>
+
+<h2 class="fw-bold mb-1">Applicants</h2>
+<p class="text-muted mb-4">
+  For <strong><%= job.title %></strong> at <%= job.company %> (<%= applicants.length %> applicants)
+</p>
+
+<% if (applicants.length) { %>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Student</th>
+          <th>Cover note</th>
+          <th>Applied on</th>
+          <th>Status</th>
+          <th>Change status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% applicants.forEach(function(a) { %>
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="<%= avatarUrl(a) %>" alt="avatar" class="member-avatar-sm">
+              <div>
+                <a href="/profile/<%= a.student_id %>" class="fw-semibold text-decoration-none"><%= a.name %></a>
+                <div class="text-muted small"><%= a.email %></div>
+              </div>
+            </div>
+          </td>
+          <td class="small" style="max-width:260px"><%= a.cover_note || '—' %></td>
+          <td class="small"><%= datetimeformat(a.created_at) %></td>
+          <td>
+            <span class="badge bg-<%= a.status === 'Shortlisted' ? 'success' : (a.status === 'Rejected' ? 'danger' : 'secondary') %>">
+              <%= a.status %>
+            </span>
+          </td>
+          <td>
+            <form method="post" action="/applications/<%= a.id %>/status" class="d-flex gap-1">
+              <select name="status" class="form-select form-select-sm" style="width:auto">
+                <% ['Applied', 'Shortlisted', 'Rejected'].forEach(function(s) { %>
+                <option value="<%= s %>" <%= a.status === s ? 'selected' : '' %>><%= s %></option>
+                <% }) %>
+              </select>
+              <button class="btn btn-sm btn-primary" type="submit">Update</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } else { %>
+<div class="alert alert-info">No one has applied to this job yet.</div>
+<% } %>
+
+<%- include('partials/footer') %>

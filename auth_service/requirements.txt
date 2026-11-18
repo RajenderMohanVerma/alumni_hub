@@ -1,0 +1,7 @@
+# Alumni Hub - AUTH SERVICE requirements (Python)
+# The main app is JavaScript (see ../package.json). Python is used
+# ONLY for this small authentication service, because password
+# hashing/verification (Werkzeug scrypt) lives here.
+# Install with:  pip install -r auth_service/requirements.txt
+Flask>=3.0
+Werkzeug>=3.0

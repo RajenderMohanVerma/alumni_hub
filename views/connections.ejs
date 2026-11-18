@@ -1,0 +1,80 @@
+<%- include('partials/header', { title: 'Connections' }) %>
+
+<h2 class="fw-bold mb-4"><i class="bi bi-person-plus"></i> My Connections</h2>
+
+<!-- ================= PENDING REQUESTS ================= -->
+<h4 class="fw-semibold mb-3">Pending requests (<%= pending.length %>)</h4>
+<% if (pending.length) { %>
+<div class="row g-3 mb-5">
+  <% pending.forEach(function(c) { %>
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <img src="<%= avatarUrl(c) %>" alt="avatar" class="member-avatar">
+        <div>
+          <h5 class="mb-0">
+            <a href="/profile/<%= c.sender_id %>" class="text-decoration-none"><%= c.name %></a>
+          </h5>
+          <span class="badge bg-<%= c.role === 'student' ? 'primary' : (c.role === 'alumni' ? 'success' : 'warning text-dark') %>">
+            <%= capitalize(c.role) %>
+          </span>
+          <p class="text-muted small mb-0"><%= c.email %></p>
+        </div>
+      </div>
+      <div class="card-footer bg-white d-flex gap-2">
+        <form method="post" action="/connections/respond/<%= c.id %>" class="flex-grow-1">
+          <input type="hidden" name="action" value="accept">
+          <button class="btn btn-success btn-sm w-100" type="submit">
+            <i class="bi bi-check-lg"></i> Accept
+          </button>
+        </form>
+        <form method="post" action="/connections/respond/<%= c.id %>" class="flex-grow-1">
+          <input type="hidden" name="action" value="reject">
+          <button class="btn btn-outline-danger btn-sm w-100" type="submit">
+            <i class="bi bi-x-lg"></i> Reject
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+<% } else { %>
+<div class="alert alert-light border mb-5">No pending requests right now.</div>
+<% } %>
+
+<!-- ================= ACCEPTED CONNECTIONS ================= -->
+<h4 class="fw-semibold mb-3">Connected (<%= accepted.length %>)</h4>
+<% if (accepted.length) { %>
+<div class="row g-3">
+  <% accepted.forEach(function(c) { %>
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex align-items-center gap-3">
+        <img src="<%= avatarUrl(c) %>" alt="avatar" class="member-avatar">
+        <div>
+          <h5 class="mb-0">
+            <a href="/profile/<%= c.other_id %>" class="text-decoration-none"><%= c.name %></a>
+          </h5>
+          <span class="badge bg-<%= c.role === 'student' ? 'primary' : (c.role === 'alumni' ? 'success' : 'warning text-dark') %>">
+            <%= capitalize(c.role) %>
+          </span>
+          <p class="text-muted small mb-0"><%= c.email %></p>
+        </div>
+      </div>
+      <div class="card-footer bg-white">
+        <a href="/chat/<%= c.other_id %>" class="btn btn-outline-primary btn-sm w-100">
+          <i class="bi bi-chat-dots"></i> Send Message
+        </a>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+<% } else { %>
+<div class="alert alert-light border">
+  No connections yet. <a href="/search">Find members</a> and send a request!
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

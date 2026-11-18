@@ -1,0 +1,45 @@
+<%- include('partials/header', { title: 'Announcements' }) %>
+
+<h2 class="fw-bold mb-4"><i class="bi bi-megaphone"></i> Announcements</h2>
+
+<% if (currentUser.role === 'faculty') { %>
+<!-- Faculty can post a new announcement -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="fw-semibold"><i class="bi bi-plus-circle"></i> Post a new announcement</h5>
+    <form method="post" action="/announcements">
+      <div class="mb-2">
+        <input class="form-control" name="title" placeholder="Announcement title" required>
+      </div>
+      <div class="mb-2">
+        <textarea class="form-control" name="body" rows="3"
+                  placeholder="Write the details..."></textarea>
+      </div>
+      <button class="btn btn-warning" type="submit">
+        <i class="bi bi-megaphone"></i> Publish
+      </button>
+    </form>
+  </div>
+</div>
+<% } %>
+
+<% if (announcements.length) { %>
+  <% announcements.forEach(function(a) { %>
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap">
+        <h5 class="fw-semibold mb-1"><%= a.title %></h5>
+        <small class="text-muted"><%= datetimeformat(a.created_at) %></small>
+      </div>
+      <% if (a.body) { %><p class="mb-2"><%= a.body %></p><% } %>
+      <small class="text-muted">
+        <i class="bi bi-person-video3"></i> Posted by <%= a.author_name %> (Faculty)
+      </small>
+    </div>
+  </div>
+  <% }) %>
+<% } else { %>
+<div class="alert alert-info">No announcements yet.</div>
+<% } %>
+
+<%- include('partials/footer') %>

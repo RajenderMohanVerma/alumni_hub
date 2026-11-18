@@ -1,0 +1,71 @@
+</main>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="site-footer mt-auto">
+  <div class="container py-5">
+    <div class="row g-4">
+      <!-- Brand + about -->
+      <div class="col-md-6 col-lg-4">
+        <h5 class="fw-bold text-white"><i class="bi bi-mortarboard-fill"></i> Alumni Hub</h5>
+        <p class="footer-text">
+          A friendly platform that keeps Students, Alumni and Faculty of
+          the institute connected — for mentoring, jobs, events and
+          lifelong friendships.
+        </p>
+        <div class="d-flex gap-2">
+          <a class="social-btn" href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a class="social-btn" href="#" aria-label="Twitter / X"><i class="bi bi-twitter-x"></i></a>
+          <a class="social-btn" href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a class="social-btn" href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+        </div>
+      </div>
+      <!-- Quick links -->
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-heading">Quick Links</h6>
+        <ul class="footer-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <% if (!currentUser) { %>
+          <li><a href="/register">Register</a></li>
+          <% } %>
+        </ul>
+      </div>
+      <!-- Features -->
+      <div class="col-6 col-lg-3">
+        <h6 class="footer-heading">Features</h6>
+        <ul class="footer-links">
+          <li><a href="/search">Member Directory</a></li>
+          <li><a href="/connections">Connections</a></li>
+          <li><a href="/jobs">Job Board</a></li>
+          <li><a href="/chat">Messaging</a></li>
+          <li><a href="/announcements">Announcements</a></li>
+        </ul>
+      </div>
+      <!-- Contact -->
+      <div class="col-md-6 col-lg-3">
+        <h6 class="footer-heading">Get in Touch</h6>
+        <ul class="footer-links">
+          <li><i class="bi bi-geo-alt me-2"></i>Alumni Cell, Main Campus</li>
+          <li><i class="bi bi-envelope me-2"></i>alumni@college.edu</li>
+          <li><i class="bi bi-telephone me-2"></i>+91 98765 43210</li>
+          <li><i class="bi bi-clock me-2"></i>Mon – Sat, 9 AM – 5 PM</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+      <span>© <%= currentYear %> Alumni Hub. All rights reserved.</span>
+      <span class="small">Built with Express, Flask, SQLite &amp; Bootstrap</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap 5 JS bundle (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Our own small script -->
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -2,115 +2,148 @@
 
 ## Architecture Style
 
-Alumni Hub follows a classic **layered monolith** architecture: one Flask
-application renders HTML pages on the server (no separate frontend app, no
-REST API). The layers are:
+Alumni Hub uses a **hybrid two-service architecture**. The project was
+originally a single Python/Flask application; it was later converted so
+that **most of the code is JavaScript**, with Python kept only where it
+is genuinely needed — password handling.
+
+| Service | Stack | Port | Responsibility |
+|---------|-------|------|----------------|
+| **Main app** | Node.js + Express + EJS | 3000 | Every page except login/register/change-password: home, dashboards, profiles, directory, connections, chat, jobs, announcements, notifications, admin panel |
+| **Auth service** | Python + Flask | 5001 | ONLY `/login`, `/register`, `/change-password`, `/logout` — the only code that ever touches passwords |
+| **Database** | SQLite file `alumni_hub.db` | — | One shared file, 11 tables, read/written by BOTH services (see [DATABASE.md](DATABASE.md)) |
+
+**Why split auth into Python?** Password hashes in the database are
+Werkzeug *scrypt* hashes (`generate_password_hash`). Only Werkzeug can
+verify them, so credential checks must stay in Python. The Express app
+therefore never sees a password: it trusts **signed tokens** issued by
+the auth service (see "Login flow" below).
+
+Inside the main app, the layering mirrors the original design:
 
 | Layer | Where | Responsibility |
 |-------|-------|----------------|
-| **Presentation** | `templates/` (Jinja2) + `static/` (CSS/JS) | Pages, layout, styling, small browser-side behaviours |
-| **Application / Routes** | `app.py` | All URL routes, request handling, validation, role checks, flash messages |
-| **Data helpers** | `models.py` | Database connection, table creation (`init_db()`), shared helpers (profiles, notifications, unread counts) |
-| **Database** | SQLite file `alumni_hub.db` | All persistent data — 11 tables (see [DATABASE.md](DATABASE.md)) |
-| **Configuration** | `config.py` | Secret key, database path, upload folder, upload rules |
+| **Presentation** | `views/` (EJS) + `public/` (CSS/JS) | Pages, layout partials, styling, small browser-side behaviours |
+| **Application / Routes** | `app.js` | All URL routes, request handling, validation, role checks, flash messages |
+| **Data helpers** | `models.js` | Database connection, table creation (`initDb()`), shared helpers (profiles, notifications, unread counts) |
+| **Configuration** | `config.js` | Ports, database path, upload folder, `AUTH_SECRET`, auth-service URL |
 
 ## Architecture Diagram
 
 ```mermaid
 flowchart TB
     U["Browser<br/>(Student / Alumni / Faculty / Admin / Guest)"]
-    subgraph Flask["Flask Application (app.py)"]
-        R["Routes<br/>auth · dashboards · profiles · connections<br/>chat · jobs · announcements · admin"]
-        H["Helpers<br/>role_required · avatar_url · connection_status"]
-        CTX["Context processor<br/>unread badges · current year"]
+    subgraph Main["Main App — Express (app.js, port 3000)"]
+        R["Routes<br/>dashboards · profiles · connections<br/>chat · jobs · announcements · admin"]
+        MW["Auth middleware<br/>verify token cookie · load fresh user row"]
+        V["views/ (EJS)<br/>header/footer partials + pages"]
     end
-    subgraph Data["Data Layer"]
-        M["models.py<br/>get_db() · init_db() · create_notification()"]
-        DB[("SQLite<br/>alumni_hub.db<br/>11 tables")]
+    subgraph Auth["Auth Service — Flask (auth_service/auth.py, port 5001)"]
+        A["/login · /register<br/>/change-password · /logout"]
+        W["Werkzeug scrypt<br/>hash + verify passwords"]
     end
-    T["templates/ (Jinja2)<br/>base.html layout + page templates"]
-    S["static/<br/>style.css · main.js · images"]
+    DB[("SQLite<br/>alumni_hub.db<br/>11 tables")]
+    P["public/<br/>style.css · main.js · images"]
     UP["uploads/<br/>profile pictures"]
 
-    U -->|"HTTP request"| R
-    R -->|"render_template"| T
-    T --> S
-    R --> H
-    R -->|"SQL queries"| M
-    M --> DB
+    U -->|"pages (port 3000)"| R
+    U -->|"login / register (port 5001)"| A
+    R --> MW
+    R --> V
+    V --> P
+    R -->|"SQL (better-sqlite3)"| DB
+    A -->|"SQL (sqlite3)"| DB
+    A --> W
+    A -->|"redirect + signed token"| U
     R -->|"save / serve photos"| UP
-    R -->|"HTML page"| U
-    CTX -.->|"variables on every page"| T
 ```
 
-## Request Lifecycle
+## Login Flow (token handoff)
 
 ```mermaid
 sequenceDiagram
     participant B as Browser
-    participant F as Flask (app.py)
-    participant L as Flask-Login
-    participant D as SQLite (models.py)
+    participant E as Express (port 3000)
+    participant F as Flask auth service (port 5001)
+    participant D as SQLite (shared)
 
-    B->>F: GET /jobs?q=python
-    F->>L: Load session user (user_loader)
-    L->>D: SELECT user by id
-    D-->>L: user row
-    F->>F: @login_required + role checks pass
-    F->>D: SELECT jobs matching search
-    D-->>F: job rows
-    F->>F: render_template("jobs.html", jobs=...)
-    F-->>B: HTML page (base.html layout + content)
-    Note over F,D: teardown_appcontext closes the DB connection
+    B->>E: Click "Login"
+    E-->>B: Redirect to :5001/login
+    B->>F: POST /login (email + password)
+    F->>D: SELECT user by email
+    F->>F: check_password_hash (Werkzeug scrypt)
+    F-->>B: Redirect to :3000/auth/callback?token=...
+    B->>E: GET /auth/callback?token=...
+    E->>E: Verify HMAC-SHA256 signature + expiry
+    E->>D: SELECT user by id (must exist + is_active)
+    E-->>B: Set httpOnly cookie "ah_token", redirect /dashboard
+    Note over B,E: Every later request: middleware verifies the<br/>cookie and reloads the FRESH user row, so an<br/>admin block/delete takes effect immediately.
 ```
 
 Step by step:
 
-1. The browser sends a request; Flask matches it to a route in `app.py`.
-2. Flask-Login reloads the logged-in user from the session cookie
-   (`load_user` in `app.py`); blocked users (`is_active = 0`) are rejected.
-3. Decorators run first: `@login_required` for member pages and
-   `@role_required('alumni')` etc. for role-specific pages.
-4. The route opens the per-request SQLite connection through
-   `models.get_db()` (stored on Flask's `g` object), runs parameterised SQL,
-   and commits writes.
-5. `render_template()` renders a Jinja2 template inside the common
-   `base.html` layout. A context processor adds the unread notification /
-   message counts (navbar badges) to every page.
-6. At the end of the request, `teardown_appcontext` closes the DB connection.
+1. Guests who open a protected page (or click Login) are redirected to
+   the Flask auth service.
+2. Flask checks the credentials with Werkzeug and builds a token:
+   `base64url(JSON {uid, email, role, exp}) + "." + base64url(HMAC-SHA256)`,
+   signed with the shared `AUTH_SECRET` and valid for 6 hours.
+3. The browser returns to Express at `/auth/callback`; Express verifies
+   the signature (constant-time compare) and expiry, loads the user,
+   stores the token in an **httpOnly cookie** and opens the dashboard.
+4. The auth middleware runs on every request: verify cookie → load the
+   fresh user row → attach `req.user`. Role guards
+   (`requireRole("alumni")` etc.) protect role-specific pages.
+5. Change-password also lives in Flask: the Express profile menu links
+   to `:5001/change-password?token=...` (cookies are not shared between
+   the two apps' URLs, so the token travels in the link); after success
+   Flask redirects back through `/auth/callback`.
+6. Logout is an Express route: it simply clears the cookie.
+
+Flash messages are session-less: a tiny helper stores one message in a
+short-lived cookie before a redirect and clears it when the next page
+renders — the same one-message-at-a-time behaviour as before.
 
 ## Folder Structure
 
 ```
 alumni-hub-minor/
-├── app.py                  -> All routes, grouped in commented sections:
-│                              SETUP -> HOME -> AUTH -> DASHBOARDS -> PROFILE
-│                              -> SEARCH -> CONNECTIONS -> CHAT -> JOBS
-│                              -> ANNOUNCEMENTS -> NOTIFICATIONS -> ADMIN
-├── models.py               -> get_db(), init_db() (all CREATE TABLEs), helpers
-├── config.py               -> SECRET_KEY, DATABASE path, UPLOAD_FOLDER, limits
-├── seed.py                 -> One-time demo data (users, jobs, messages...)
-├── requirements.txt        -> Flask, Flask-Login, Werkzeug
-├── alumni_hub.db           -> SQLite database file (created automatically)
+├── package.json            -> JS dependencies (express, ejs, better-sqlite3,
+│                              bcryptjs, multer, cookie-parser)
+├── app.js                  -> Express server: ALL main routes, grouped in
+│                              commented sections (setup, tokens, flash,
+│                              public pages, auth handoff, dashboards,
+│                              profiles, members/chat, jobs, admin, errors)
+├── models.js               -> openDb(), initDb() (all CREATE TABLEs), helpers
+├── config.js               -> PORT, DATABASE path, UPLOAD_DIR, AUTH_SECRET,
+│                              AUTH_SERVICE_URL
+├── seed.js                 -> Demo data (JavaScript; Werkzeug-format hashes)
+├── seed.py                 -> Demo data (Python, canonical copy — kept as-is)
+├── alumni_hub.db           -> SQLite database file (created by the seed)
 ├── uploads/                -> Uploaded profile pictures (served by a route)
-├── static/
+├── public/
 │   ├── css/style.css       -> Custom styles on top of Bootstrap 5
 │   ├── js/main.js          -> Toasts, confirm dialogs, chat scroll,
 │   │                          reveal animations, counters, live search
 │   └── images/default-avatar.svg
-├── templates/
-│   ├── base.html           -> Common layout: navbar, flash toasts, footer
-│   ├── home.html, about.html, services.html, contact.html   (public pages)
-│   ├── auth/               -> login, register, change password
-│   ├── dashboard_student.html / dashboard_alumni.html / dashboard_faculty.html
-│   ├── profile.html, edit_profile.html
-│   ├── search.html, connections.html
-│   ├── chat.html, conversation.html
-│   ├── jobs.html, job_detail.html, post_job.html
-│   ├── my_jobs.html, applicants.html, applied_jobs.html
-│   ├── announcements.html, notifications.html
+├── views/
+│   ├── partials/           -> header.ejs (navbar + flash) / footer.ejs —
+│   │                          together they are the old base.html layout
+│   ├── home.ejs, about.ejs, services.ejs, contact.ejs   (public pages)
+│   ├── dashboard_student.ejs / dashboard_alumni.ejs / dashboard_faculty.ejs
+│   ├── profile.ejs, edit_profile.ejs
+│   ├── search.ejs, connections.ejs
+│   ├── chat.ejs, conversation.ejs
+│   ├── jobs.ejs, job_detail.ejs, post_job.ejs
+│   ├── my_jobs.ejs, applicants.ejs, applied_jobs.ejs
+│   ├── announcements.ejs, notifications.ejs
 │   ├── admin/              -> dashboard, users, jobs, messages
-│   └── errors/             -> 404.html, 500.html
+│   └── errors/             -> 404, 500
+├── auth_service/
+│   ├── auth.py             -> Small Flask app: ONLY auth routes (port 5001)
+│   ├── templates/          -> auth_base.html + login / register /
+│   │                          change_password (same navbar/footer style)
+│   ├── static/style.css    -> Copy of the main stylesheet
+│   └── requirements.txt    -> Flask + Werkzeug only
 └── docs/                   -> This documentation
 ```
 
@@ -118,24 +151,31 @@ alumni-hub-minor/
 
 | Part | Technology | Why |
 |------|-----------|-----|
-| Language | Python 3 | Simple, readable — ideal for a project of this size |
-| Web framework | Flask | Lightweight; routing + templating in one place |
-| Login/session | Flask-Login | Standard, safe session handling |
-| Password security | Werkzeug `generate_password_hash` / `check_password_hash` | Passwords are never stored in plain text |
-| Database | SQLite via the built-in `sqlite3` module | Zero setup, one file, real SQL — easy to explain |
-| Templates | Jinja2 (built into Flask) | Server-side rendering with a common layout |
-| Frontend | Bootstrap 5 + Font Awesome (CDN) | Responsive UI without writing much CSS |
-| Custom CSS/JS | `static/css/style.css`, `static/js/main.js` | Theme, animations, live search, counters |
+| Main language | JavaScript (Node.js) | The main application code |
+| Web framework | Express 4 | Small, explicit routing — easy to read and explain |
+| Templates | EJS | Server-side rendering with shared header/footer partials |
+| Database access (JS) | `better-sqlite3` | Synchronous API — route code reads like simple sequential steps |
+| Photo uploads | Multer | Standard Express upload handling |
+| Auth service | Python 3 + Flask | Kept only for authentication |
+| Password security | Werkzeug scrypt (`generate_password_hash` / `check_password_hash`) | Passwords are never stored or checked in plain text — and only ever in the Python service |
+| Login tokens | HMAC-SHA256 signed JSON (hand-rolled, ~30 lines) | Stateless, explainable; no session store needed |
+| Database | SQLite (one shared file) | Zero setup, real SQL — easy to explain |
+| Frontend | Bootstrap 5 + Bootstrap Icons (CDN) | Responsive UI without writing much CSS |
+| Custom CSS/JS | `public/css/style.css`, `public/js/main.js` | Theme, animations, live search, counters |
 | Charts | Chart.js (CDN) | "Users by Role" bar chart on the admin dashboard |
 
 ## Design Principles Followed
 
-- **Thin, readable routes** — each route does one job and is grouped under a
-  commented section header in `app.py`.
-- **Parameterised SQL everywhere** — no string-built queries with user input,
-  so the app is safe from basic SQL injection.
-- **Idempotent schema** — every table uses `CREATE TABLE IF NOT EXISTS`, so
-  `init_db()` can run on every startup safely.
-- **One connection per request** — via Flask's `g`, closed automatically.
+- **Passwords only in Python** — the JavaScript side contains no
+  password-verification code at all; it only verifies token signatures.
+- **Thin, readable routes** — each route does one job and is grouped
+  under a commented section header in `app.js`.
+- **Parameterised SQL everywhere** — no string-built queries with user
+  input, so both services are safe from basic SQL injection.
+- **Idempotent schema** — every table uses `CREATE TABLE IF NOT EXISTS`;
+  the identical schema lives in `models.js` and `auth_service/auth.py`,
+  so either service can boot first.
+- **Fresh user state** — the user row is reloaded from the database on
+  every request, so admin actions apply immediately.
 - **Referential integrity** — foreign keys with `ON DELETE CASCADE`, so
   deleting a user cleanly removes their profile, connections, messages, etc.

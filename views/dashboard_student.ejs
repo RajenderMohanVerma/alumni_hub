@@ -1,0 +1,86 @@
+<%- include('partials/header', { title: 'Student Dashboard' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-0">Hello, <%= currentUser.name %> <i class="bi bi-mortarboard text-primary"></i></h2>
+    <p class="text-muted mb-0">
+      Student Dashboard
+      <% if (profile && profile.course) { %> · <%= profile.course %><% if (profile.branch) { %> (<%= profile.branch %>)<% } %><% } %>
+    </p>
+  </div>
+  <a href="/profile/edit" class="btn btn-outline-primary">
+    <i class="bi bi-pencil-square"></i> Edit Profile
+  </a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon"><i class="bi bi-people"></i></div>
+      <div><div class="stat-number"><%= stats.connections %></div>
+      <div>My Connections</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-green">
+      <div class="stat-icon"><i class="bi bi-briefcase"></i></div>
+      <div><div class="stat-number"><%= stats.jobs %></div>
+      <div>Jobs Available</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-orange">
+      <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+      <div><div class="stat-number"><%= stats.applications %></div>
+      <div>My Applications</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card stat-purple">
+      <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
+      <div><div class="stat-number"><%= stats.announcements %></div>
+      <div>Announcements</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4"><a href="/search" class="text-decoration-none">
+    <div class="card action-card shadow-sm h-100"><div class="card-body">
+      <h5><i class="bi bi-search text-primary"></i> Find Members</h5>
+      <p class="text-muted mb-0">Search alumni and faculty, view profiles and connect.</p>
+    </div></div></a>
+  </div>
+  <div class="col-md-4"><a href="/jobs" class="text-decoration-none">
+    <div class="card action-card shadow-sm h-100"><div class="card-body">
+      <h5><i class="bi bi-briefcase text-success"></i> Browse Jobs</h5>
+      <p class="text-muted mb-0">See jobs posted by alumni and apply in one click.</p>
+    </div></div></a>
+  </div>
+  <div class="col-md-4"><a href="/my-applications" class="text-decoration-none">
+    <div class="card action-card shadow-sm h-100"><div class="card-body">
+      <h5><i class="bi bi-file-earmark-check text-warning"></i> Track Applications</h5>
+      <p class="text-muted mb-0">Check whether you are Applied, Shortlisted or Rejected.</p>
+    </div></div></a>
+  </div>
+  <div class="col-md-4"><a href="/chat" class="text-decoration-none">
+    <div class="card action-card shadow-sm h-100"><div class="card-body">
+      <h5><i class="bi bi-chat-dots text-info"></i> Messages</h5>
+      <p class="text-muted mb-0">Chat with your connections and mentors.</p>
+    </div></div></a>
+  </div>
+  <div class="col-md-4"><a href="/announcements" class="text-decoration-none">
+    <div class="card action-card shadow-sm h-100"><div class="card-body">
+      <h5><i class="bi bi-megaphone text-danger"></i> Announcements</h5>
+      <p class="text-muted mb-0">Read the latest notices from faculty.</p>
+    </div></div></a>
+  </div>
+  <div class="col-md-4"><a href="/notifications" class="text-decoration-none">
+    <div class="card action-card shadow-sm h-100"><div class="card-body">
+      <h5><i class="bi bi-bell text-secondary"></i> Notifications</h5>
+      <p class="text-muted mb-0">Requests, new jobs and status updates in one place.</p>
+    </div></div></a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

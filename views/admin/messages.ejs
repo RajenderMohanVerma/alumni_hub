@@ -1,0 +1,34 @@
+<%- include('../partials/header', { title: 'Contact Messages' }) %>
+
+<h2 class="fw-bold mb-1"><i class="bi bi-envelope"></i> Contact Messages</h2>
+<p class="text-muted mb-4">Messages sent by visitors from the public Contact page.</p>
+
+<% if (messages.length) { %>
+  <% messages.forEach(function(m) { %>
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap gap-2">
+        <h5 class="fw-semibold mb-1"><%= m.subject || '(No subject)' %></h5>
+        <small class="text-muted"><%= datetimeformat(m.created_at) %></small>
+      </div>
+      <p class="mb-2" style="white-space:pre-line"><%= m.message %></p>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <small class="text-muted">
+          <i class="bi bi-person"></i> <%= m.name %> ·
+          <i class="bi bi-envelope"></i> <%= m.email %>
+        </small>
+        <form method="post" action="/admin/messages/<%= m.id %>/delete" class="d-inline">
+          <button class="btn btn-sm btn-outline-danger js-confirm" type="submit"
+                  data-confirm="Delete this message?">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+<% } else { %>
+<div class="alert alert-info">No contact messages yet.</div>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,63 @@
+<%- include('partials/header', { title: job ? 'Edit Job' : 'Post a Job' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="fw-bold mb-3">
+          <% if (job) { %>
+            <i class="bi bi-pencil-square"></i> Edit Job
+          <% } else { %>
+            <i class="bi bi-plus-circle"></i> Post a New Job
+          <% } %>
+        </h3>
+
+        <form method="post" action="<%= job ? '/jobs/' + job.id + '/edit' : '/jobs/new' %>">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="title">Job title *</label>
+              <input class="form-control" id="title" name="title" required
+                     placeholder="e.g. Software Developer Intern"
+                     value="<%= job ? job.title : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="company">Company *</label>
+              <input class="form-control" id="company" name="company" required
+                     placeholder="e.g. TCS" value="<%= job ? job.company : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="location">Location</label>
+              <input class="form-control" id="location" name="location"
+                     placeholder="e.g. Pune / Remote"
+                     value="<%= job ? (job.location || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="salary">Salary / Stipend</label>
+              <input class="form-control" id="salary" name="salary"
+                     placeholder="e.g. 4.5 LPA or 25,000/month"
+                     value="<%= job ? (job.salary || '') : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="deadline">Last date to apply</label>
+              <input class="form-control" type="date" id="deadline" name="deadline"
+                     value="<%= job ? (job.deadline || '') : '' %>">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="description">Job description</label>
+              <textarea class="form-control" id="description" name="description" rows="5"
+                        placeholder="Role details, required skills, eligibility..."><%= job ? (job.description || '') : '' %></textarea>
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-success" type="submit">
+              <i class="bi bi-check-circle"></i> <%= job ? 'Save Changes' : 'Post Job' %>
+            </button>
+            <a href="<%= job ? '/jobs/' + job.id : '/jobs' %>" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
