@@ -2,39 +2,53 @@
 
 <div class="row justify-content-center">
   <div class="col-lg-8">
-    <div class="card shadow-sm">
-      <!-- Chat header -->
-      <div class="card-header bg-white d-flex align-items-center gap-3">
-        <a href="/chat" class="btn btn-outline-secondary btn-sm">
+    <div class="card shadow-sm chat-card">
+      <!-- Chat header: back button, partner avatar + name, and a real
+           detail from their profile (chatSubline, built by the route) -->
+      <div class="chat-header">
+        <a href="/chat" class="chat-back" aria-label="Back to all chats">
           <i class="bi bi-arrow-left"></i>
         </a>
-        <img src="<%= avatarUrl(other) %>" alt="avatar" class="member-avatar-sm">
-        <div>
-          <strong><%= other.name %></strong>
-          <span class="badge bg-secondary"><%= capitalize(other.role) %></span>
-          <div class="text-muted small"><%= other.email %></div>
-        </div>
+        <a href="/profile/<%= other.id %>" class="chat-head-link">
+          <img src="<%= avatarUrl(other) %>" alt="avatar" class="chat-head-avatar">
+          <span class="chat-head-meta">
+            <span class="chat-head-name">
+              <%= other.name %>
+              <span class="badge bg-<%= other.role === 'student' ? 'primary' : (other.role === 'alumni' ? 'success' : 'warning text-dark') %>"><%= capitalize(other.role) %></span>
+            </span>
+            <span class="chat-head-sub"><%= chatSubline %></span>
+          </span>
+        </a>
       </div>
 
-      <!-- Messages -->
-      <div class="card-body chat-box" id="chatBox">
+      <!-- Messages: one bubble row per message. Consecutive messages
+           from the same sender form a cluster (tighter spacing, the
+           partner's mini avatar only under the last one), and a date
+           separator appears whenever the day changes. -->
+      <div class="chat-box" id="chatBox">
         <% if (messages.length) { %>
-          <% messages.forEach(function(m) { %>
-            <% if (m.sender_id === currentUser.id) { %>
-            <div class="d-flex justify-content-end mb-2">
-              <div class="chat-bubble mine">
-                <div><%= m.body %></div>
-                <div class="chat-time"><%= datetimeformat(m.created_at) %></div>
-              </div>
-            </div>
-            <% } else { %>
-            <div class="d-flex justify-content-start mb-2">
-              <div class="chat-bubble theirs">
-                <div><%= m.body %></div>
-                <div class="chat-time"><%= datetimeformat(m.created_at) %></div>
-              </div>
-            </div>
+          <% var lastDay = null; %>
+          <% messages.forEach(function(m, idx) { %>
+            <% var day = (m.created_at || '').slice(0, 10); %>
+            <% if (day && day !== lastDay) { lastDay = day; %>
+              <div class="chat-day"><span><%= dateformat(m.created_at) %></span></div>
             <% } %>
+            <% var mine = m.sender_id === currentUser.id; %>
+            <% var next = messages[idx + 1]; %>
+            <% var clusterEnd = !next || next.sender_id !== m.sender_id || (next.created_at || '').slice(0, 10) !== day; %>
+            <div class="chat-row <%= mine ? 'mine' : 'theirs' %><%= clusterEnd ? '' : ' in-cluster' %>" style="--chat-i: <%= idx %>">
+              <% if (!mine) { %>
+                <% if (clusterEnd) { %>
+                  <img src="<%= avatarUrl(other) %>" alt="avatar" class="chat-mini-avatar">
+                <% } else { %>
+                  <span class="chat-mini-spacer"></span>
+                <% } %>
+              <% } %>
+              <div class="chat-bubble <%= mine ? 'mine' : 'theirs' %>">
+                <div class="chat-text"><%= m.body %></div>
+                <div class="chat-time"><%= timeformat(m.created_at) %></div>
+              </div>
+            </div>
           <% }) %>
         <% } else { %>
           <p class="text-center text-muted my-4">
@@ -43,13 +57,13 @@
         <% } %>
       </div>
 
-      <!-- Send box -->
-      <div class="card-footer bg-white">
-        <form method="post" action="/chat/<%= other.id %>" class="d-flex gap-2">
-          <input class="form-control" name="body" placeholder="Type a message..."
+      <!-- Composer: same form as always (POST, field "body") -->
+      <div class="chat-composer">
+        <form method="post" action="/chat/<%= other.id %>" class="chat-form">
+          <input class="chat-input" name="body" placeholder="Type a message..."
                  required autocomplete="off" autofocus>
-          <button class="btn btn-primary" type="submit">
-            <i class="bi bi-send"></i> Send
+          <button class="chat-send" type="submit" aria-label="Send message">
+            <i class="bi bi-send-fill"></i>
           </button>
         </form>
       </div>

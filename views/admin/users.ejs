@@ -1,19 +1,75 @@
 <%- include('../partials/header', { title: 'Manage Users' }) %>
 
-<h2 class="fw-bold mb-4"><i class="bi bi-people"></i> Manage Users</h2>
+<%
+  var roleCount = { student: 0, alumni: 0, faculty: 0, admin: 0 };
+  var activeCount = 0;
+  users.forEach(function (u) {
+    if (roleCount[u.role] !== undefined) roleCount[u.role]++;
+    if (u.is_active) activeCount++;
+  });
+  var blockedCount = users.length - activeCount;
+%>
 
-<form method="get" action="/admin/users" class="mb-3">
-  <div class="input-group" style="max-width:420px">
-    <input class="form-control" name="q" placeholder="Search by name or email..."
-           value="<%= q %>">
-    <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+<!-- ================= PAGE HEAD ================= -->
+<div class="au-head">
+  <h2 class="fw-bold mb-0"><i class="bi bi-people"></i> Manage Users</h2>
+  <span class="au-total-chip" id="auTotalChip">
+    <i class="bi bi-people-fill"></i> <%= users.length %> users
+  </span>
+</div>
+
+<!-- ================= MINI STATS ================= -->
+<div class="au-stats">
+  <div class="au-stat">
+    <div class="au-stat-icon grad-slate"><i class="bi bi-people-fill"></i></div>
+    <div><div class="au-stat-num"><%= users.length %></div><div class="au-stat-label">Total</div></div>
   </div>
-</form>
+  <div class="au-stat">
+    <div class="au-stat-icon grad-blue"><i class="bi bi-mortarboard-fill"></i></div>
+    <div><div class="au-stat-num"><%= roleCount.student %></div><div class="au-stat-label">Students</div></div>
+  </div>
+  <div class="au-stat">
+    <div class="au-stat-icon grad-green"><i class="bi bi-award-fill"></i></div>
+    <div><div class="au-stat-num"><%= roleCount.alumni %></div><div class="au-stat-label">Alumni</div></div>
+  </div>
+  <div class="au-stat">
+    <div class="au-stat-icon grad-purple"><i class="bi bi-book-half"></i></div>
+    <div><div class="au-stat-num"><%= roleCount.faculty %></div><div class="au-stat-label">Faculty</div></div>
+  </div>
+  <div class="au-stat">
+    <div class="au-stat-icon grad-green"><i class="bi bi-check-circle-fill"></i></div>
+    <div><div class="au-stat-num"><%= activeCount %></div><div class="au-stat-label">Active</div></div>
+  </div>
+  <div class="au-stat">
+    <div class="au-stat-icon grad-red"><i class="bi bi-slash-circle-fill"></i></div>
+    <div><div class="au-stat-num"><%= blockedCount %></div><div class="au-stat-label">Blocked</div></div>
+  </div>
+</div>
 
-<div class="card shadow-sm">
+<!-- ================= CONTROLS ================= -->
+<div class="au-controls">
+  <form method="get" action="/admin/users" class="au-search-form">
+    <div class="input-group">
+      <input id="auSearch" class="form-control" name="q" placeholder="Search by name or email..."
+             value="<%= q %>" autocomplete="off">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+    </div>
+  </form>
+  <div class="au-chips" id="auChips">
+    <button type="button" class="au-chip active" data-role="all">All <span class="au-chip-count"><%= users.length %></span></button>
+    <button type="button" class="au-chip" data-role="student">Student <span class="au-chip-count"><%= roleCount.student %></span></button>
+    <button type="button" class="au-chip" data-role="alumni">Alumni <span class="au-chip-count"><%= roleCount.alumni %></span></button>
+    <button type="button" class="au-chip" data-role="faculty">Faculty <span class="au-chip-count"><%= roleCount.faculty %></span></button>
+    <button type="button" class="au-chip" data-role="admin">Admin <span class="au-chip-count"><%= roleCount.admin %></span></button>
+  </div>
+</div>
+<p class="au-showing" id="auShowing" aria-live="polite"></p>
+
+<!-- ================= DESKTOP TABLE ================= -->
+<div class="card shadow-sm au-table-card d-none d-md-block">
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-light">
+    <table class="table align-middle mb-0 au-table">
+      <thead>
         <tr>
           <th>User</th>
           <th>Role</th>
@@ -24,47 +80,48 @@
         </tr>
       </thead>
       <tbody>
-        <% users.forEach(function(u) { %>
-        <tr>
+        <% users.forEach(function(u, idx) { %>
+        <tr class="au-item au-row" data-role="<%= u.role %>"
+            data-search="<%= (u.name + ' ' + u.email).toLowerCase() %>"
+            style="animation-delay:<%= Math.min(idx * 45, 360) %>ms">
           <td>
             <div class="d-flex align-items-center gap-2">
-              <img src="<%= avatarUrl(u) %>" alt="avatar" class="member-avatar-sm">
-              <div>
+              <img src="<%= avatarUrl(u) %>" alt="avatar" class="au-avatar">
+              <div class="au-user-cell">
                 <a href="/profile/<%= u.id %>" class="fw-semibold text-decoration-none"><%= u.name %></a>
                 <div class="text-muted small"><%= u.email %></div>
               </div>
             </div>
           </td>
           <td>
-            <span class="badge bg-<%= u.role === 'admin' ? 'dark' : (u.role === 'student' ? 'primary' : (u.role === 'alumni' ? 'success' : 'warning text-dark')) %>">
-              <%= capitalize(u.role) %>
-            </span>
+            <span class="badge badge-role-<%= u.role %>"><%= capitalize(u.role) %></span>
           </td>
           <td class="small"><%= u.phone || '—' %></td>
-          <td class="small"><%= u.created_at ? u.created_at.slice(0, 10) : '' %></td>
+          <td class="small"><%= u.created_at ? dateformat(u.created_at) : '' %></td>
           <td>
             <% if (u.is_active) { %>
-              <span class="badge bg-success">Active</span>
+              <span class="au-status au-status-active"><span class="au-dot"></span>Active</span>
             <% } else { %>
-              <span class="badge bg-danger">Blocked</span>
+              <span class="au-status au-status-blocked"><span class="au-dot"></span>Blocked</span>
             <% } %>
           </td>
           <td class="text-end">
             <% if (u.id !== currentUser.id) { %>
             <form method="post" action="/admin/users/<%= u.id %>/toggle" class="d-inline">
-              <button class="btn btn-sm btn-<%= u.is_active ? 'warning' : 'success' %>" type="submit">
+              <button class="btn btn-sm btn-<%= u.is_active ? 'warning' : 'success' %> au-icon-btn" type="submit"
+                      title="<%= u.is_active ? 'Block' : 'Unblock' %> <%= u.name %>">
                 <i class="bi bi-<%= u.is_active ? 'slash-circle' : 'check-circle' %>"></i>
-                <%= u.is_active ? 'Block' : 'Unblock' %>
               </button>
             </form>
             <form method="post" action="/admin/users/<%= u.id %>/delete" class="d-inline">
-              <button class="btn btn-sm btn-outline-danger js-confirm" type="submit"
+              <button class="btn btn-sm btn-outline-danger js-confirm au-icon-btn" type="submit"
+                      title="Delete <%= u.name %>"
                       data-confirm="Delete <%= u.name %> and all their data?">
                 <i class="bi bi-trash"></i>
               </button>
             </form>
             <% } else { %>
-            <span class="text-muted small">You</span>
+            <span class="au-you">You</span>
             <% } %>
           </td>
         </tr>
@@ -76,5 +133,137 @@
     </table>
   </div>
 </div>
+
+<!-- ================= MOBILE CARDS ================= -->
+<div class="au-cards d-md-none">
+  <% users.forEach(function(u, idx) { %>
+  <div class="au-card au-item" data-role="<%= u.role %>"
+       data-search="<%= (u.name + ' ' + u.email).toLowerCase() %>"
+       style="animation-delay:<%= Math.min(idx * 45, 360) %>ms">
+    <div class="d-flex align-items-center gap-3">
+      <img src="<%= avatarUrl(u) %>" alt="avatar" class="au-avatar au-avatar-lg">
+      <div class="au-user-cell">
+        <a href="/profile/<%= u.id %>" class="fw-semibold text-decoration-none"><%= u.name %></a>
+        <div class="text-muted small text-break"><%= u.email %></div>
+        <div class="au-card-badges">
+          <span class="badge badge-role-<%= u.role %>"><%= capitalize(u.role) %></span>
+          <% if (u.is_active) { %>
+            <span class="au-status au-status-active"><span class="au-dot"></span>Active</span>
+          <% } else { %>
+            <span class="au-status au-status-blocked"><span class="au-dot"></span>Blocked</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <div class="au-card-meta">
+      <span><i class="bi bi-telephone"></i> <%= u.phone || '—' %></span>
+      <span><i class="bi bi-calendar-event"></i> Joined <%= u.created_at ? dateformat(u.created_at) : '' %></span>
+    </div>
+    <% if (u.id !== currentUser.id) { %>
+    <div class="au-card-actions">
+      <form method="post" action="/admin/users/<%= u.id %>/toggle" class="flex-grow-1">
+        <button class="btn btn-<%= u.is_active ? 'warning' : 'success' %> w-100" type="submit">
+          <i class="bi bi-<%= u.is_active ? 'slash-circle' : 'check-circle' %>"></i>
+          <%= u.is_active ? 'Block' : 'Unblock' %>
+        </button>
+      </form>
+      <form method="post" action="/admin/users/<%= u.id %>/delete" class="flex-grow-1">
+        <button class="btn btn-outline-danger js-confirm w-100" type="submit"
+                data-confirm="Delete <%= u.name %> and all their data?">
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </form>
+    </div>
+    <% } else { %>
+    <div class="au-card-actions">
+      <span class="au-you">This is you</span>
+    </div>
+    <% } %>
+  </div>
+  <% }) %>
+  <% if (!users.length) { %>
+  <div class="card shadow-sm p-4 text-center text-muted">No users found.</div>
+  <% } %>
+</div>
+
+<!-- shown by the filter script when the client-side filters hide everyone -->
+<div class="au-noresults" id="auNoResults" hidden>
+  <i class="bi bi-search"></i>
+  <div>No users match your filters.</div>
+  <button type="button" class="btn btn-outline-primary btn-sm rounded-pill mt-2" id="auClearFilters">
+    Clear filters
+  </button>
+</div>
+
+<script>
+/* Admin users: live client-side filtering.
+   The search box still submits to the server exactly as before (GET
+   ?q=); while typing it ALSO filters the rendered rows/cards instantly,
+   combined with the role chips. Both renderings (desktop table rows and
+   mobile cards) carry .au-item + data-role / data-search, so one pass
+   keeps them in sync. The visible count is read from the table rows -
+   every user has exactly one row. */
+(function () {
+  var input = document.getElementById("auSearch");
+  var chips = document.querySelectorAll("#auChips .au-chip");
+  var items = document.querySelectorAll(".au-item");
+  var rows = document.querySelectorAll(".au-table .au-item");
+  var showing = document.getElementById("auShowing");
+  var totalChip = document.getElementById("auTotalChip");
+  var noResults = document.getElementById("auNoResults");
+  var clearBtn = document.getElementById("auClearFilters");
+  var total = rows.length;
+  var activeRole = "all";
+  if (!items.length) { if (showing) showing.textContent = ""; return; }
+
+  function apply() {
+    var term = input ? input.value.trim().toLowerCase() : "";
+    var visible = 0;
+    items.forEach(function (el) {
+      var okRole = activeRole === "all" || el.getAttribute("data-role") === activeRole;
+      var okText = !term || (el.getAttribute("data-search") || "").indexOf(term) !== -1;
+      var show = okRole && okText;
+      el.style.display = show ? "" : "none";
+      if (show) {
+        el.classList.remove("au-pop");
+        void el.offsetWidth; /* restart the gentle fade-in */
+        el.classList.add("au-pop");
+      }
+    });
+    rows.forEach(function (el) { if (el.style.display !== "none") visible++; });
+    if (showing) {
+      showing.textContent = (visible === total)
+        ? "Showing all " + total + " users"
+        : "Showing " + visible + " of " + total + " users";
+    }
+    if (totalChip) {
+      totalChip.innerHTML = '<i class="bi bi-people-fill"></i> ' +
+        (visible === total ? total + " users" : visible + " of " + total + " users");
+    }
+    if (noResults) noResults.hidden = visible !== 0;
+  }
+
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      chips.forEach(function (c) { c.classList.remove("active"); });
+      chip.classList.add("active");
+      activeRole = chip.getAttribute("data-role") || "all";
+      apply();
+    });
+  });
+  if (input) input.addEventListener("input", apply);
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function () {
+      if (input) input.value = "";
+      activeRole = "all";
+      chips.forEach(function (c) {
+        c.classList.toggle("active", c.getAttribute("data-role") === "all");
+      });
+      apply();
+    });
+  }
+  apply();
+})();
+</script>
 
 <%- include('../partials/footer') %>

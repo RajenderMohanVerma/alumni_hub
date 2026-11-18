@@ -27,7 +27,8 @@
         <tr>
           <td>
             <div class="d-flex align-items-center gap-2">
-              <img src="<%= avatarUrl(a) %>" alt="avatar" class="member-avatar-sm">
+              <%# a is an application row: the avatar belongs to the applicant (a.student_id) %>
+              <img src="<%= avatarUrl({ id: a.student_id, profile_pic: a.profile_pic, has_photo: a.has_photo, photo_updated_at: a.photo_updated_at }) %>" alt="avatar" class="member-avatar-sm">
               <div>
                 <a href="/profile/<%= a.student_id %>" class="fw-semibold text-decoration-none"><%= a.name %></a>
                 <div class="text-muted small"><%= a.email %></div>

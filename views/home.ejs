@@ -1,96 +1,167 @@
 <%- include('partials/header', { title: 'Home' }) %>
 
 <!-- ================= HERO ================= -->
-<section class="hero rounded-4 text-white p-4 p-md-5 mb-4">
-  <div class="row align-items-center">
-    <div class="col-lg-8">
-      <h1 class="display-5 fw-bold">Welcome to Alumni Hub</h1>
-      <p class="lead mb-4">
+<section class="home-hero text-white">
+  <div class="home-blob home-blob-1" aria-hidden="true"></div>
+  <div class="home-blob home-blob-2" aria-hidden="true"></div>
+  <div class="home-blob home-blob-3" aria-hidden="true"></div>
+
+  <div class="row align-items-center home-hero-inner">
+    <div class="col-lg-7">
+      <span class="home-hero-badge home-anim home-anim-1">
+        <i class="bi bi-mortarboard-fill"></i> Your college community, online
+      </span>
+      <h1 class="home-hero-title home-anim home-anim-2">
+        Welcome to <span class="home-hero-accent">Alumni Hub</span>
+      </h1>
+      <p class="lead home-hero-sub home-anim home-anim-3">
         One place where <strong>Students</strong>, <strong>Alumni</strong> and
         <strong>Faculty</strong> stay connected — find mentors, share jobs,
         chat with batchmates and never miss a college announcement.
       </p>
-      <% if (currentUser) { %>
-        <a href="/dashboard" class="btn btn-light btn-lg fw-semibold me-2">
-          <i class="bi bi-speedometer2"></i> Go to Dashboard
-        </a>
-        <a href="/search" class="btn btn-outline-light btn-lg">
-          <i class="bi bi-people"></i> Find Members
-        </a>
-      <% } else { %>
-        <a href="/register" class="btn btn-light btn-lg fw-semibold me-2">
-          <i class="bi bi-person-plus"></i> Join Now
-        </a>
-        <a href="/login" class="btn btn-outline-light btn-lg">
-          <i class="bi bi-box-arrow-in-right"></i> Login
-        </a>
-      <% } %>
+      <div class="home-hero-ctas home-anim home-anim-4">
+        <% if (currentUser) { %>
+          <a href="/dashboard" class="btn btn-light btn-lg fw-semibold me-2 home-btn home-btn-white">
+            <i class="bi bi-speedometer2"></i> Go to Dashboard
+          </a>
+          <a href="/search" class="btn btn-outline-light btn-lg home-btn home-btn-ghost">
+            <i class="bi bi-people"></i> Find Members
+          </a>
+        <% } else { %>
+          <a href="/register" class="btn btn-light btn-lg fw-semibold me-2 home-btn home-btn-white">
+            <i class="bi bi-person-plus"></i> Join Now
+          </a>
+          <a href="/login" class="btn btn-outline-light btn-lg home-btn home-btn-ghost">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+          </a>
+        <% } %>
+      </div>
     </div>
-    <div class="col-lg-4 text-center d-none d-lg-block">
-      <i class="bi bi-mortarboard-fill hero-icon"></i>
+
+    <div class="col-lg-5 d-none d-lg-block">
+      <div class="home-hero-stage" aria-hidden="true">
+        <div class="home-float-card home-fc-1">
+          <div class="home-float-icon grad-blue"><i class="bi bi-people"></i></div>
+          <div>
+            <div class="home-float-title">New connection</div>
+            <div class="home-float-sub">Seniors &amp; juniors, one tap away</div>
+            <span class="home-float-pill">Connect</span>
+          </div>
+        </div>
+        <div class="home-float-card home-fc-2">
+          <div class="home-float-icon grad-green"><i class="bi bi-briefcase"></i></div>
+          <div>
+            <div class="home-float-title">Jobs &amp; internships</div>
+            <div class="home-float-sub">Alumni post openings for you</div>
+            <span class="home-float-pill">Apply in 1 click</span>
+          </div>
+        </div>
+        <div class="home-float-card home-fc-3">
+          <div class="home-float-icon grad-amber"><i class="bi bi-megaphone"></i></div>
+          <div>
+            <div class="home-float-title">Announcements</div>
+            <div class="home-float-sub">Never miss a campus update</div>
+            <span class="home-float-pill">Stay in the loop</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <svg class="home-hero-wave" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,52 C220,92 460,4 720,30 C980,56 1210,92 1440,38 L1440,90 L0,90 Z"></path>
+  </svg>
 </section>
 
 <!-- ================= STATISTICS ================= -->
-<section class="row g-3 mb-5 text-center">
-  <div class="col-6 col-md-3 reveal">
-    <div class="card p-3"><h3 class="text-primary mb-0"><span class="counter" data-count="<%= stats.students %>"><%= stats.students %></span></h3>
-        <small class="text-muted">Students</small></div>
-  </div>
-  <div class="col-6 col-md-3 reveal">
-    <div class="card p-3"><h3 class="text-success mb-0"><span class="counter" data-count="<%= stats.alumni %>"><%= stats.alumni %></span></h3>
-        <small class="text-muted">Alumni</small></div>
-  </div>
-  <div class="col-6 col-md-3 reveal">
-    <div class="card p-3"><h3 class="mb-0" style="color:#7c3aed;"><span class="counter" data-count="<%= stats.faculty %>"><%= stats.faculty %></span></h3>
-        <small class="text-muted">Faculty</small></div>
-  </div>
-  <div class="col-6 col-md-3 reveal">
-    <div class="card p-3"><h3 class="text-warning mb-0"><span class="counter" data-count="<%= stats.jobs %>"><%= stats.jobs %></span></h3>
-        <small class="text-muted">Jobs Posted</small></div>
+<section class="home-stats">
+  <div class="row g-3 px-1 px-md-3 text-center">
+    <div class="col-6 col-md-3 reveal">
+      <div class="home-stat-card">
+        <div class="home-stat-icon grad-blue"><i class="bi bi-mortarboard-fill"></i></div>
+        <div class="home-stat-text">
+          <div class="home-stat-number"><span class="counter" data-count="<%= stats.students %>"><%= stats.students %></span></div>
+          <div class="home-stat-label">Students</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 reveal">
+      <div class="home-stat-card">
+        <div class="home-stat-icon grad-green"><i class="bi bi-award-fill"></i></div>
+        <div class="home-stat-text">
+          <div class="home-stat-number"><span class="counter" data-count="<%= stats.alumni %>"><%= stats.alumni %></span></div>
+          <div class="home-stat-label">Alumni</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 reveal">
+      <div class="home-stat-card">
+        <div class="home-stat-icon grad-purple"><i class="bi bi-book-half"></i></div>
+        <div class="home-stat-text">
+          <div class="home-stat-number"><span class="counter" data-count="<%= stats.faculty %>"><%= stats.faculty %></span></div>
+          <div class="home-stat-label">Faculty</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 reveal">
+      <div class="home-stat-card">
+        <div class="home-stat-icon grad-amber"><i class="bi bi-briefcase-fill"></i></div>
+        <div class="home-stat-text">
+          <div class="home-stat-number"><span class="counter" data-count="<%= stats.jobs %>"><%= stats.jobs %></span></div>
+          <div class="home-stat-label">Jobs Posted</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- ================= FEATURES ================= -->
-<section class="mb-5">
+<section class="home-section">
   <h2 class="fw-bold text-center mb-1 section-title-center">What can you do here?</h2>
   <p class="text-center text-muted mb-4">Simple features, made for everyday campus use.</p>
   <div class="row g-3">
-    <div class="col-md-4 reveal">
-      <div class="card h-100 shadow-sm feature-card">
-        <div class="card-body">
-          <i class="bi bi-people feature-icon text-primary"></i>
-          <h5 class="card-title fw-semibold">Connect with Members</h5>
-          <p class="card-text text-muted">
-            Search the member directory, view profiles and send connection
-            requests to seniors, juniors and teachers.
-          </p>
-        </div>
+    <div class="col-md-6 col-lg-3 reveal">
+      <div class="home-feature-card">
+        <div class="home-feature-icon grad-blue"><i class="bi bi-people"></i></div>
+        <h5 class="fw-semibold">Connect with Members</h5>
+        <p class="text-muted">
+          Search the member directory, view profiles and send connection
+          requests to seniors, juniors and teachers.
+        </p>
+        <a href="/search" class="home-card-link">Browse members <i class="bi bi-arrow-right"></i></a>
       </div>
     </div>
-    <div class="col-md-4 reveal">
-      <div class="card h-100 shadow-sm feature-card">
-        <div class="card-body">
-          <i class="bi bi-briefcase feature-icon text-success"></i>
-          <h5 class="card-title fw-semibold">Jobs &amp; Internships</h5>
-          <p class="card-text text-muted">
-            Alumni post openings from their companies. Students apply in one
-            click and track the status of every application.
-          </p>
-        </div>
+    <div class="col-md-6 col-lg-3 reveal">
+      <div class="home-feature-card">
+        <div class="home-feature-icon grad-green"><i class="bi bi-briefcase"></i></div>
+        <h5 class="fw-semibold">Jobs &amp; Internships</h5>
+        <p class="text-muted">
+          Alumni post openings from their companies. Students apply in one
+          click and track the status of every application.
+        </p>
+        <a href="/jobs" class="home-card-link">See jobs <i class="bi bi-arrow-right"></i></a>
       </div>
     </div>
-    <div class="col-md-4 reveal">
-      <div class="card h-100 shadow-sm feature-card">
-        <div class="card-body">
-          <i class="bi bi-chat-dots feature-icon text-warning"></i>
-          <h5 class="card-title fw-semibold">Chat &amp; Announcements</h5>
-          <p class="card-text text-muted">
-            Message any member directly, and read faculty announcements
-            about events, meets and important notices.
-          </p>
-        </div>
+    <div class="col-md-6 col-lg-3 reveal">
+      <div class="home-feature-card">
+        <div class="home-feature-icon grad-amber"><i class="bi bi-chat-dots"></i></div>
+        <h5 class="fw-semibold">Chat &amp; Announcements</h5>
+        <p class="text-muted">
+          Message any member directly, and read faculty announcements
+          about events, meets and important notices.
+        </p>
+        <a href="/announcements" class="home-card-link">Read announcements <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3 reveal">
+      <div class="home-feature-card">
+        <div class="home-feature-icon grad-purple"><i class="bi bi-stars"></i></div>
+        <h5 class="fw-semibold">Smart Suggestions</h5>
+        <p class="text-muted">
+          Your dashboard suggests members and jobs matched to your course,
+          skills and batch — so the right people find you faster.
+        </p>
+        <a href="/dashboard" class="home-card-link">Open dashboard <i class="bi bi-arrow-right"></i></a>
       </div>
     </div>
   </div>
@@ -101,32 +172,126 @@
   </div>
 </section>
 
+<!-- ================= HOW IT WORKS ================= -->
+<section class="home-section">
+  <h2 class="fw-bold text-center mb-1 section-title-center">How it works</h2>
+  <p class="text-center text-muted mb-4">From sign-up to your first connection in three simple steps.</p>
+  <div class="row g-4 home-steps">
+    <div class="col-md-4 reveal">
+      <div class="home-step">
+        <div class="home-step-iconwrap">
+          <div class="home-step-badge"><i class="bi bi-person-plus"></i></div>
+          <span class="home-step-num">1</span>
+        </div>
+        <h5 class="fw-semibold">Create your account</h5>
+        <p class="text-muted">
+          Register free in under a minute as a student, alumnus or
+          faculty member.
+        </p>
+        <a href="/register" class="home-card-link justify-content-center">Create an account <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+    <div class="col-md-4 reveal">
+      <div class="home-step">
+        <div class="home-step-iconwrap">
+          <div class="home-step-badge"><i class="bi bi-person-vcard"></i></div>
+          <span class="home-step-num">2</span>
+        </div>
+        <h5 class="fw-semibold">Complete your profile</h5>
+        <p class="text-muted">
+          Add your course, batch, skills and a photo — a complete profile
+          gets better matches and more connections.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4 reveal">
+      <div class="home-step">
+        <div class="home-step-iconwrap">
+          <div class="home-step-badge"><i class="bi bi-chat-heart"></i></div>
+          <span class="home-step-num">3</span>
+        </div>
+        <h5 class="fw-semibold">Connect, chat &amp; apply</h5>
+        <p class="text-muted">
+          Send connection requests, message members directly and apply
+          to jobs and internships in one click.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURED ALUMNI & FACULTY ================= -->
+<% if (featuredPeople && featuredPeople.length) { %>
+<section class="home-section">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold mb-0 section-title">Featured Alumni &amp; Faculty</h2>
+    <a href="/search" class="btn btn-outline-primary btn-sm rounded-pill">
+      Browse all members <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+  <div class="row g-3">
+    <% featuredPeople.forEach(function(person) {
+         var sub = person.role === 'alumni'
+           ? [person.alumni_designation, person.company].filter(Boolean).join(' · ')
+           : [person.faculty_designation, person.department].filter(Boolean).join(' · ');
+    %>
+    <div class="col-6 col-lg-3 reveal">
+      <a href="/profile/<%= person.id %>" class="home-person-card">
+        <img src="<%= avatarUrl(person) %>" alt="<%= person.name %>" class="home-person-avatar">
+        <div class="home-person-name"><%= person.name %></div>
+        <span class="badge badge-role-<%= person.role %>"><%= capitalize(person.role) %></span>
+        <% if (sub) { %><div class="home-person-sub"><%= sub %></div><% } %>
+        <span class="home-card-link justify-content-center">View profile <i class="bi bi-arrow-right"></i></span>
+      </a>
+    </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
 <!-- ================= LATEST JOBS ================= -->
-<section>
+<section class="home-section">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="fw-bold mb-0 section-title">Latest Jobs</h2>
-    <a href="/jobs" class="btn btn-outline-primary btn-sm">View all jobs</a>
+    <a href="/jobs" class="btn btn-outline-primary btn-sm rounded-pill">
+      View all jobs <i class="bi bi-arrow-right"></i>
+    </a>
   </div>
   <% if (latestJobs.length) { %>
     <div class="row g-3">
-      <% latestJobs.forEach(function(job) { %>
-      <div class="col-md-4 reveal">
-        <div class="card h-100 shadow-sm job-card">
-          <div class="card-body">
-            <h5 class="card-title fw-semibold"><%= job.title %></h5>
-            <p class="card-subtitle text-muted mb-2">
-              <i class="bi bi-building"></i> <%= job.company %>
-              <% if (job.location) { %> · <i class="bi bi-geo-alt"></i> <%= job.location %><% } %>
-            </p>
-            <p class="card-text text-muted small">
-              <%= job.description ? truncate(job.description, 110) : 'No description provided.' %>
-            </p>
+      <% latestJobs.forEach(function(job) {
+           var _h = 0, _c = String(job.company || '');
+           for (var _i = 0; _i < _c.length; _i++) { _h = (_h * 31 + _c.charCodeAt(_i)) >>> 0; }
+           var tileClass = 'home-job-tile-' + (_h % 6);
+      %>
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="home-job-card">
+          <div class="d-flex align-items-center gap-3">
+            <div class="home-job-tile <%= tileClass %>"><%= (job.company || '?').charAt(0).toUpperCase() %></div>
+            <div class="home-job-head">
+              <h5 class="fw-semibold mb-1"><%= job.title %></h5>
+              <div class="text-muted small">
+                <i class="bi bi-building"></i> <%= job.company %>
+              </div>
+            </div>
           </div>
-          <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-            <span class="badge bg-light text-dark border">
+          <div class="home-job-chips">
+            <% if (job.location) { %>
+              <span class="home-chip"><i class="bi bi-geo-alt"></i> <%= job.location %></span>
+            <% } %>
+            <% if (job.salary) { %>
+              <span class="home-chip"><i class="bi bi-cash-stack"></i> <%= job.salary %></span>
+            <% } %>
+            <span class="home-chip"><i class="bi bi-clock"></i> Posted <%= dateformat(job.created_at) %></span>
+          </div>
+          <p class="home-job-desc">
+            <%= job.description ? truncate(job.description, 110) : 'No description provided.' %>
+          </p>
+          <div class="home-job-foot">
+            <span class="home-job-deadline">
               <i class="bi bi-calendar-event"></i> <%= dateformat(job.deadline) %>
             </span>
-            <a href="/jobs/<%= job.id %>" class="btn btn-primary btn-sm">Details</a>
+            <a href="/jobs/<%= job.id %>" class="btn btn-primary btn-sm rounded-pill px-3">View &amp; Apply</a>
           </div>
         </div>
       </div>
@@ -136,6 +301,24 @@
     <div class="alert alert-info">
       No jobs posted yet. Alumni can post the first job from the Jobs page.
     </div>
+  <% } %>
+</section>
+
+<!-- ================= CTA BAND ================= -->
+<section class="home-cta reveal">
+  <h2 class="fw-bold mb-2">Ready to reconnect with your batchmates?</h2>
+  <p class="home-cta-sub">
+    Join Alumni Hub to find mentors, discover openings shared by alumni
+    and stay in touch with your college community.
+  </p>
+  <% if (currentUser) { %>
+    <a href="/dashboard" class="btn btn-light btn-lg fw-semibold home-btn home-btn-white">
+      <i class="bi bi-speedometer2"></i> Go to Dashboard
+    </a>
+  <% } else { %>
+    <a href="/register" class="btn btn-light btn-lg fw-semibold home-btn home-btn-white">
+      <i class="bi bi-person-plus"></i> Join Now — it's free
+    </a>
   <% } %>
 </section>
 

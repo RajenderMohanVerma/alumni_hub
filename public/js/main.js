@@ -32,9 +32,27 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+    // Templates in this app put class "js-confirm" + data-confirm on the
+    // submit BUTTON instead of the form — cover that pattern too: when the
+    // clicked button carries a data-confirm question, ask before submitting.
+    document.addEventListener("submit", function (event) {
+        var form = event.target;
+        if (form.classList && form.classList.contains("js-confirm")) {
+            return; // already handled by the form-level listener above
+        }
+        var btn = event.submitter;
+        if (btn && btn.getAttribute && btn.getAttribute("data-confirm")) {
+            if (!window.confirm(btn.getAttribute("data-confirm"))) {
+                event.preventDefault();
+            }
+        }
+    });
 
     // 3) Chat: scroll to the newest message -----------------------------------
-    var chatBox = document.getElementById("chat-box");
+    // (The thread template's scroll area is id="chatBox"; this lookup
+    // used to ask for "chat-box", which matched nothing, so the
+    // auto-scroll silently never happened.)
+    var chatBox = document.getElementById("chatBox");
     if (chatBox) {
         chatBox.scrollTop = chatBox.scrollHeight;
     }

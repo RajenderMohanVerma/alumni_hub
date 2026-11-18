@@ -517,6 +517,24 @@ main {
 .avatar-md { width: 56px;  height: 56px; }
 .avatar-lg { width: 110px; height: 110px; }
 
+/* The big picture on the profile page hero. This rule was MISSING
+   until now, so an uploaded photo rendered at its natural size and
+   blew up the whole card - the fixed box + object-fit crop it to a
+   proper avatar whatever its real dimensions are. */
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+    flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+    .profile-avatar { width: 112px; height: 112px; }
+}
+
 /* ---------- Role badges ---------- */
 .badge-role-student { background-color: #2563eb; }
 .badge-role-alumni  { background-color: #059669; }
@@ -531,43 +549,238 @@ main {
     padding: 3.5rem 0;
 }
 
-/* ---------- Chat page ---------- */
+/* ================= CHAT (conversation page) =================
+   A messaging-app layout: the card is a flex column with a
+   viewport-based height - header pinned on top, messages scroll
+   in the middle, composer pinned to the bottom. (The old float-
+   based .chat-msg rules that used to live here were not used by
+   any template and are gone.) */
+.chat-card {
+    display: flex;
+    flex-direction: column;
+    height: min(740px, calc(100dvh - 190px));
+    min-height: 460px;
+    overflow: hidden;
+}
+
+/* --- Header --- */
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.chat-back {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.chat-back:hover { background: #f1f5f9; color: #0f172a; }
+
+.chat-head-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    min-width: 0;
+}
+
+.chat-head-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.chat-head-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.chat-head-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.chat-head-sub {
+    color: #64748b;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Messages --- */
 .chat-box {
-    height: 420px;
+    flex: 1;
     overflow-y: auto;
     padding: 1rem;
     background: #f8fafc;
-    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
 }
 
-.chat-msg {
-    max-width: 75%;
-    padding: 0.55rem 0.85rem;
-    border-radius: 14px;
-    margin-bottom: 0.6rem;
-    width: fit-content;
-    clear: both;
+.chat-day {
+    text-align: center;
+    margin: 0.5rem 0 0.8rem;
 }
 
-.chat-msg .chat-time {
-    display: block;
-    font-size: 0.7rem;
-    opacity: 0.75;
-    margin-top: 0.2rem;
+.chat-day span {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
 }
 
-.chat-mine {
-    background: var(--ah-primary);
+.chat-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+    animation: chat-in 0.35s ease both;
+    animation-delay: min(calc(var(--chat-i, 0) * 25ms), 400ms);
+}
+
+.chat-row.in-cluster { margin-bottom: 0.18rem; }
+.chat-row.mine { justify-content: flex-end; }
+.chat-row.theirs { justify-content: flex-start; }
+
+.chat-mini-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.chat-mini-spacer { width: 32px; flex-shrink: 0; }
+
+.chat-bubble {
+    max-width: 78%;
+    padding: 0.55rem 0.8rem 0.4rem;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.chat-bubble.mine {
+    background: linear-gradient(135deg, var(--ah-primary), var(--ah-sky));
     color: #fff;
-    float: right;
     border-bottom-right-radius: 4px;
 }
 
-.chat-theirs {
+.chat-bubble.theirs {
     background: #fff;
     border: 1px solid #e2e8f0;
-    float: left;
+    color: #0f172a;
     border-bottom-left-radius: 4px;
+}
+
+.chat-time {
+    display: block;
+    font-size: 0.68rem;
+    margin-top: 0.15rem;
+    text-align: right;
+    opacity: 0.75;
+}
+
+.chat-bubble.theirs .chat-time { color: #64748b; }
+
+@keyframes chat-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* --- Composer --- */
+.chat-composer {
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 0.7rem 0.9rem;
+    flex-shrink: 0;
+}
+
+.chat-form {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.chat-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-input:focus {
+    border-color: var(--ah-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.chat-send {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ah-primary), var(--ah-sky));
+    color: #fff;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-send:hover {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+/* Phones: the card takes the viewport between the navbar and the
+   mobile bottom nav (the body already gets 62px bottom padding
+   from the .has-mobile-nav rule, so the composer stays clear). */
+@media (max-width: 991.98px) {
+    .chat-card { height: calc(100dvh - 150px); min-height: 340px; }
+    .chat-bubble { max-width: 82%; }
+}
+
+@media (max-width: 575.98px) {
+    .chat-box { padding: 0.75rem; }
+    .chat-head-sub { max-width: 170px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-row { animation: none; }
+    .chat-send, .chat-back, .chat-input { transition: none; }
 }
 
 /* ---------- Misc ---------- */
@@ -583,11 +796,6 @@ main {
 footer {
     background: #0f172a;
     color: #cbd5e1;
-}
-
-@media (max-width: 576px) {
-    .chat-box { height: 340px; }
-    .chat-msg { max-width: 88%; }
 }
 
 /* ---------- Small screens: stat cards ---------- */
@@ -879,6 +1087,18 @@ main {
 .member-avatar {
     width: 56px;
     height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+/* Small variant (chat header, applicants list). This rule was also
+   missing - the class was used but never defined, so those pictures
+   rendered at natural size too. */
+.member-avatar-sm {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #e2e8f0;
@@ -1664,4 +1884,956 @@ body { overflow-x: clip; }
     }
     #mainNavbar .ah-brand-tagline { display: none; }
     #mainNavbar .ah-profile-name { display: none; }
+}
+
+/* ==========================================================================
+   HOME PAGE
+   The redesigned home page (views/home.ejs): layered hero with drifting
+   blobs + floating preview cards, an overlapping stats band, richer
+   feature / step / people / job cards and a closing CTA band. All
+   classes are prefixed .home- so no other page is affected. Reveal and
+   count-up still come from the shared systems in main.js (.reveal /
+   .counter) - nothing here replaces them.
+   ========================================================================== */
+
+/* Shared gradient icon tiles (hero previews, stats, features) */
+.grad-blue   { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+.grad-green  { background: linear-gradient(135deg, #059669, #34d399); }
+.grad-purple { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.grad-amber  { background: linear-gradient(135deg, #d97706, #f59e0b); }
+
+/* ---------- Hero ---------- */
+.home-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    background: linear-gradient(125deg, #1e3a8a 0%, var(--ah-primary-dark) 34%, var(--ah-primary) 62%, var(--ah-sky) 115%);
+    background-size: 180% 180%;
+    animation: heroShift 14s ease infinite;
+    padding: 3.75rem 2.75rem 6.75rem;
+    margin-bottom: 0;
+}
+
+/* faint dot texture, same recipe as the old .hero::before */
+.home-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.5px, transparent 1.6px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+
+.home-hero-inner {
+    position: relative;
+    z-index: 2;
+}
+
+/* soft glowing blobs drifting slowly behind the content */
+.home-blob {
+    position: absolute;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(55px);
+    pointer-events: none;
+    animation: homeBlobDrift 20s ease-in-out infinite alternate;
+}
+
+.home-blob-1 {
+    width: 430px; height: 430px;
+    top: -150px; right: -70px;
+    background: rgba(56, 189, 248, 0.55);
+}
+
+.home-blob-2 {
+    width: 300px; height: 300px;
+    bottom: -130px; left: 34%;
+    background: rgba(129, 140, 248, 0.45);
+    animation-duration: 25s;
+    animation-direction: alternate-reverse;
+}
+
+.home-blob-3 {
+    width: 190px; height: 190px;
+    top: 36%; left: -70px;
+    background: rgba(255, 255, 255, 0.20);
+    animation-duration: 17s;
+}
+
+@keyframes homeBlobDrift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(-42px, 30px) scale(1.12); }
+}
+
+/* curved divider into the page background at the hero's bottom edge */
+.home-hero-wave {
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    z-index: 1;
+    width: 100%;
+    height: 70px;
+    display: block;
+    pointer-events: none;
+}
+
+.home-hero-wave path { fill: var(--ah-bg); }
+
+/* entrance stagger (fill mode "both" keeps elements hidden only while
+   the animation is pending; with animations off they show normally) */
+.home-anim { animation: homeFadeUp 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.home-anim-1 { animation-delay: 0.05s; }
+.home-anim-2 { animation-delay: 0.16s; }
+.home-anim-3 { animation-delay: 0.27s; }
+.home-anim-4 { animation-delay: 0.38s; }
+
+@keyframes homeFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.home-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 0.42rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(4px);
+    margin-bottom: 1.15rem;
+}
+
+.home-hero-title {
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.08;
+    text-shadow: 0 2px 12px rgba(15, 23, 42, 0.25);
+    margin-bottom: 1rem;
+    font-size: 2.6rem;
+}
+
+@media (min-width: 992px) {
+    .home-hero-title { font-size: 3.5rem; }
+}
+
+.home-hero-accent {
+    background: linear-gradient(92deg, #ffffff 10%, #7dd3fc 60%, #bae6fd 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.home-hero-sub {
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 34rem;
+    margin-bottom: 1.75rem;
+}
+
+.home-hero-ctas .btn { margin-bottom: 0.5rem; }
+
+/* pill buttons used in the hero and the CTA band (added on top of the
+   usual Bootstrap .btn classes, which stay in the markup) */
+.home-btn {
+    border-radius: 999px;
+    padding: 0.72rem 1.8rem;
+    font-size: 1.02rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.home-btn-white {
+    background: #ffffff;
+    color: var(--ah-primary-dark);
+    border-color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+}
+
+.home-btn-white:hover {
+    background: #ffffff;
+    color: var(--ah-primary-dark);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.3);
+}
+
+/* shine sweep across the white pill on hover */
+.home-btn-white::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -90%;
+    width: 55%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(56, 189, 248, 0.35), transparent);
+    transform: skewX(-18deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.home-btn-white:hover::after { left: 135%; }
+
+.home-btn-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    color: #ffffff;
+    backdrop-filter: blur(4px);
+}
+
+.home-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+/* floating preview cards on the hero's right side (desktop only) */
+.home-hero-stage {
+    position: relative;
+    min-height: 392px;
+}
+
+.home-float-card {
+    position: absolute;
+    width: 268px;
+    background: #ffffff;
+    color: #0f172a;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+    padding: 0.9rem 1rem;
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    animation: homeFloat 6s ease-in-out infinite alternate;
+}
+
+.home-fc-1 { top: 2px;   right: 4px; }
+.home-fc-2 { top: 140px; right: 118px; animation-delay: 1.2s; }
+.home-fc-3 { top: 278px; right: 0;     animation-delay: 2.1s; }
+
+@keyframes homeFloat {
+    from { transform: translateY(-6px); }
+    to   { transform: translateY(8px); }
+}
+
+.home-float-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-float-title { font-weight: 700; font-size: 0.95rem; line-height: 1.25; }
+.home-float-sub   { font-size: 0.8rem; color: #64748b; margin: 0.15rem 0 0.45rem; }
+
+.home-float-pill {
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: #eef4ff;
+    color: var(--ah-primary-dark);
+    border-radius: 999px;
+    padding: 0.16rem 0.6rem;
+}
+
+/* ---------- Stats band (overlaps the hero's bottom edge) ---------- */
+.home-stats {
+    position: relative;
+    z-index: 5;
+    margin-top: -4.4rem;
+    margin-bottom: 3.25rem;
+}
+
+.home-stat-card {
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 18px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
+    padding: 1.05rem 1.1rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    text-align: left;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
+}
+
+.home-stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-stat-number {
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.05;
+    color: #0f172a;
+}
+
+.home-stat-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* ---------- Generic home section spacing ---------- */
+.home-section { margin-bottom: 3.25rem; }
+
+/* arrow link pinned to a card's bottom */
+.home-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--ah-primary);
+    text-decoration: none;
+}
+
+.home-card-link i { transition: transform 0.2s ease; }
+.home-card-link:hover { color: var(--ah-primary-dark); }
+.home-card-link:hover i { transform: translateX(3px); }
+
+/* ---------- Feature cards ---------- */
+.home-feature-card {
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    padding: 1.5rem 1.35rem 1.35rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+/* gradient sweep that grows along the card's top edge on hover */
+.home-feature-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--ah-primary), var(--ah-sky));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.32s ease;
+}
+
+.home-feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.home-feature-card:hover::before { transform: scaleX(1); }
+
+.home-feature-card p { font-size: 0.94rem; }
+.home-feature-card .home-card-link { margin-top: auto; padding-top: 0.9rem; }
+
+.home-feature-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    color: #ffffff;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+}
+
+/* ---------- "How it works" steps ---------- */
+.home-steps { position: relative; }
+
+/* dashed connector behind the step badges (desktop / tablet only) */
+@media (min-width: 768px) {
+    .home-steps::before {
+        content: "";
+        position: absolute;
+        top: 34px;
+        left: 17%;
+        right: 17%;
+        border-top: 2px dashed #bfdbfe;
+        z-index: 0;
+    }
+}
+
+.home-step {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 0 0.75rem;
+}
+
+.home-step .home-card-link { margin-top: 0.25rem; }
+
+.home-step-iconwrap {
+    position: relative;
+    width: 68px;
+    margin: 0 auto 1rem;
+}
+
+.home-step-badge {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ah-primary), var(--ah-sky));
+    color: #ffffff;
+    font-size: 1.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #ffffff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+}
+
+.home-step-num {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+}
+
+/* ---------- Featured people cards ---------- */
+.home-person-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    padding: 1.4rem 1rem 1.2rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-person-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+    color: inherit;
+}
+
+.home-person-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #dbe7ff;
+    margin-bottom: 0.7rem;
+}
+
+.home-person-name {
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 0.4rem;
+}
+
+.home-person-sub {
+    font-size: 0.83rem;
+    color: #64748b;
+    margin-top: 0.45rem;
+}
+
+.home-person-card .home-card-link { margin-top: auto; padding-top: 0.85rem; }
+
+/* ---------- Latest job cards ---------- */
+.home-job-card {
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    padding: 1.35rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.home-job-head { min-width: 0; }
+.home-job-head h5 { line-height: 1.3; }
+
+/* company initial-letter tile; colour picked by a hash of the name */
+.home-job-tile {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 1.35rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-job-tile-0 { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+.home-job-tile-1 { background: linear-gradient(135deg, #059669, #34d399); }
+.home-job-tile-2 { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.home-job-tile-3 { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.home-job-tile-4 { background: linear-gradient(135deg, #db2777, #f472b6); }
+.home-job-tile-5 { background: linear-gradient(135deg, #0d9488, #2dd4bf); }
+
+.home-job-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.9rem 0 0.65rem;
+}
+
+.home-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 999px;
+    padding: 0.24rem 0.62rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.home-job-desc {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.home-job-foot {
+    margin-top: auto;
+    padding-top: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.home-job-deadline {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.home-job-foot .btn { min-height: 38px; }
+
+/* ---------- Closing CTA band ---------- */
+.home-cta {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    background: linear-gradient(120deg, var(--ah-primary-dark), var(--ah-primary) 55%, var(--ah-sky));
+    background-size: 180% 180%;
+    animation: heroShift 14s ease infinite;
+    color: #ffffff;
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.home-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.5px, transparent 1.6px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+
+.home-cta h2,
+.home-cta p,
+.home-cta a { position: relative; z-index: 1; }
+
+.home-cta-sub {
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 36rem;
+    margin: 0 auto 1.6rem;
+}
+
+/* ---------- Home page on small screens ---------- */
+@media (max-width: 575.98px) {
+    .home-hero { padding: 2.4rem 1.25rem 6.25rem; border-radius: 20px; }
+    .home-hero-title { font-size: 2.05rem; }
+    .home-hero-sub { font-size: 1.02rem; }
+    .home-hero-ctas .btn {
+        width: 100%;
+        justify-content: center;
+        margin-right: 0 !important;
+    }
+    .home-hero-wave { height: 44px; }
+    .home-stats { margin-top: -4rem; }
+    .home-stat-card { padding: 0.85rem 0.8rem; gap: 0.65rem; }
+    .home-stat-icon { width: 44px; height: 44px; font-size: 1.25rem; border-radius: 12px; }
+    .home-stat-number { font-size: 1.35rem; }
+    .home-stat-label { font-size: 0.78rem; }
+    .home-person-avatar { width: 62px; height: 62px; }
+}
+
+/* ---------- Home page: reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .home-hero, .home-cta { animation: none; }
+    .home-blob, .home-float-card { animation: none; }
+    .home-anim { animation: none; }
+    .home-stat-card, .home-feature-card, .home-person-card, .home-job-card,
+    .home-btn, .home-card-link i, .home-feature-card::before,
+    .home-btn-white::after { transition: none; }
+    .home-stat-card:hover, .home-feature-card:hover,
+    .home-person-card:hover, .home-job-card:hover { transform: none; }
+}
+
+/* ==========================================================================
+   ADMIN USERS
+   The redesigned Manage Users page (views/admin/users.ejs): page head
+   with a live count chip, a mini stats row, a controls bar (server
+   search + client-side role chips), a modern desktop table and, below
+   the md breakpoint, stacked user cards instead of a scrolling table.
+   All classes are prefixed .au- so no other page is affected.
+   ========================================================================== */
+
+.grad-slate { background: linear-gradient(135deg, #334155, #64748b); }
+.grad-red   { background: linear-gradient(135deg, #dc2626, #f87171); }
+
+/* ---------- Page head ---------- */
+.au-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.1rem;
+}
+
+.au-total-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: linear-gradient(120deg, var(--ah-primary-dark), var(--ah-primary) 60%, var(--ah-sky));
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+}
+
+/* ---------- Mini stats row ---------- */
+.au-stats {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+}
+
+@media (max-width: 991.98px) {
+    .au-stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 575.98px) {
+    .au-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+.au-stat {
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    padding: 0.7rem 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.au-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    color: #ffffff;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.au-stat-num { font-size: 1.15rem; font-weight: 800; line-height: 1.05; color: #0f172a; }
+.au-stat-label { font-size: 0.74rem; font-weight: 600; color: #64748b; }
+
+/* ---------- Controls bar ---------- */
+.au-controls {
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+}
+
+.au-search-form { flex: 1 1 320px; max-width: 460px; }
+.au-search-form .input-group { width: 100%; }
+
+.au-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.au-chip {
+    border: 1.5px solid #dbe7ff;
+    background: #f4f8ff;
+    color: var(--ah-primary-dark);
+    border-radius: 999px;
+    padding: 0.42rem 0.9rem;
+    min-height: 40px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.au-chip:hover { transform: translateY(-1px); border-color: var(--ah-primary); }
+
+.au-chip.active {
+    background: var(--ah-primary);
+    border-color: var(--ah-primary);
+    color: #ffffff;
+}
+
+.au-chip-count {
+    background: rgba(37, 99, 235, 0.14);
+    color: var(--ah-primary-dark);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.08rem 0.5rem;
+}
+
+.au-chip.active .au-chip-count { background: rgba(255, 255, 255, 0.25); color: #ffffff; }
+
+.au-showing {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0 0 0.9rem 0.25rem;
+    min-height: 1.25rem;
+}
+
+/* ---------- Shared bits (table + cards) ---------- */
+.au-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #dbe7ff;
+}
+
+.au-avatar-lg { width: 52px; height: 52px; }
+
+.au-user-cell { min-width: 0; }
+.au-user-cell a { color: #0f172a; }
+.au-user-cell a:hover { color: var(--ah-primary); }
+
+.au-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.au-status .au-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.au-status-active  { background: #dcfce7; color: #166534; }
+.au-status-blocked { background: #fee2e2; color: #991b1b; }
+
+.au-you {
+    display: inline-flex;
+    align-items: center;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 999px;
+    padding: 0.32rem 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.au-icon-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+/* gentle re-entry when the filter shows an item again */
+.au-pop { animation: auPop 0.3s ease both; }
+
+@keyframes auPop {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ---------- Desktop table ---------- */
+.au-table-card { border: 1px solid #e8eef7; border-radius: 16px; overflow: hidden; }
+
+.au-table thead th {
+    position: sticky;
+    top: 62px;
+    z-index: 3;
+    background: #f1f6fe;
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 2px solid #dbe7ff;
+    box-shadow: 0 6px 10px -6px rgba(15, 23, 42, 0.18);
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+}
+
+.au-table tbody tr { animation: auFadeRow 0.45s ease both; }
+.au-table tbody tr:nth-child(even) { background: #f8fafc; }
+.au-table tbody tr:hover { background: #eef4ff; }
+.au-table td { padding-top: 0.8rem; padding-bottom: 0.8rem; }
+
+@keyframes auFadeRow {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ---------- Mobile cards ---------- */
+.au-cards { display: flex; flex-direction: column; gap: 0.85rem; }
+
+.au-card {
+    background: #ffffff;
+    border: 1px solid #e8eef7;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+    padding: 1rem;
+    animation: auFadeCard 0.45s ease both;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.au-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.11);
+}
+
+@keyframes auFadeCard {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.au-card-badges {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.45rem;
+}
+
+.au-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    font-size: 0.83rem;
+    color: #64748b;
+    border-top: 1px solid #eef2f7;
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+}
+
+.au-card-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.85rem;
+}
+
+.au-card-actions .btn { min-height: 44px; font-weight: 600; }
+
+/* ---------- No-results (client-side filters) ---------- */
+.au-noresults {
+    border: 1.5px dashed #c7d7f5;
+    background: #f8fbff;
+    border-radius: 16px;
+    color: #64748b;
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-top: 0.5rem;
+}
+
+.au-noresults > i { font-size: 1.6rem; display: block; margin-bottom: 0.5rem; }
+
+/* ---------- Admin users on small screens ---------- */
+@media (max-width: 575.98px) {
+    .au-controls { padding: 0.85rem; }
+    .au-search-form { flex-basis: 100%; max-width: none; }
+    .au-chip { padding: 0.38rem 0.75rem; font-size: 0.83rem; }
+}
+
+/* ---------- Admin users: reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .au-table tbody tr, .au-card, .au-pop { animation: none; }
+    .au-chip, .au-card { transition: none; }
+    .au-chip:hover, .au-card:hover { transform: none; }
 }

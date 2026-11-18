@@ -27,7 +27,11 @@
             </div>
             <div class="col-md-6">
               <label class="form-label" for="profile_pic">Profile picture (PNG/JPG, max 2 MB)</label>
-              <input class="form-control" type="file" id="profile_pic" name="profile_pic" accept=".png,.jpg,.jpeg">
+              <div class="d-flex align-items-center gap-3">
+                <img src="<%= avatarUrl(currentUser) %>" alt="Your current profile picture"
+                     class="avatar avatar-md" title="Your current profile picture">
+                <input class="form-control" type="file" id="profile_pic" name="profile_pic" accept=".png,.jpg,.jpeg">
+              </div>
             </div>
           </div>
 

@@ -10,7 +10,8 @@
   <div class="col-md-6 col-lg-4">
     <div class="card shadow-sm h-100">
       <div class="card-body d-flex align-items-center gap-3">
-        <img src="<%= avatarUrl(c) %>" alt="avatar" class="member-avatar">
+        <%# c is a connection row: its id is the CONNECTION's, so the avatar helper gets the sender's user id explicitly %>
+        <img src="<%= avatarUrl({ id: c.sender_id, profile_pic: c.profile_pic, has_photo: c.has_photo, photo_updated_at: c.photo_updated_at }) %>" alt="avatar" class="member-avatar">
         <div>
           <h5 class="mb-0">
             <a href="/profile/<%= c.sender_id %>" class="text-decoration-none"><%= c.name %></a>
@@ -51,7 +52,8 @@
   <div class="col-md-6 col-lg-4">
     <div class="card shadow-sm h-100">
       <div class="card-body d-flex align-items-center gap-3">
-        <img src="<%= avatarUrl(c) %>" alt="avatar" class="member-avatar">
+        <%# Same note as above: the avatar belongs to the OTHER member (c.other_id), not to the connection row %>
+        <img src="<%= avatarUrl({ id: c.other_id, profile_pic: c.profile_pic, has_photo: c.has_photo, photo_updated_at: c.photo_updated_at }) %>" alt="avatar" class="member-avatar">
         <div>
           <h5 class="mb-0">
             <a href="/profile/<%= c.other_id %>" class="text-decoration-none"><%= c.name %></a>
