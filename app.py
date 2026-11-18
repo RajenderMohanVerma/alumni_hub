@@ -38,6 +38,18 @@ app.config.from_object("config")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 models.init_db()
 
+# --- Vercel demo support ---------------------------------------------------
+# On Vercel the storage is temporary, so the database starts empty on every
+# cold start. If there are no users yet, fill the demo data automatically
+# (the same data seed.py creates) so the demo logins always work.
+if os.environ.get("VERCEL"):
+    _conn = models.get_raw_connection()
+    _user_count = _conn.execute("SELECT COUNT(*) AS c FROM users").fetchone()["c"]
+    _conn.close()
+    if _user_count == 0:
+        import seed
+        seed.main()
+
 # Close the database connection automatically at the end of each request
 app.teardown_appcontext(models.close_db)
 
