@@ -92,6 +92,25 @@ def inject_app_url():
     return {"app_url": APP_URL}
 
 
+@app.after_request
+def cache_static_assets(response):
+    """Let browsers actually cache this service's CSS / logo files.
+
+    Flask's default for /static files is "Cache-Control: no-cache",
+    so the login page's stylesheet was revalidated against the
+    server on every single visit. The policy matches the main app:
+    reuse the file for an hour without asking, then for up to a day
+    a stale copy may be shown while a fresh one is fetched in the
+    background (stale-while-revalidate). Only /static/ paths are
+    touched - the HTML pages themselves stay uncached, as before.
+    """
+    if request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = (
+            "public, max-age=3600, stale-while-revalidate=86400"
+        )
+    return response
+
+
 # ---------------------------------------------------------------------------
 # Database helpers (same database + same schema as the Express app)
 # ---------------------------------------------------------------------------
@@ -185,10 +204,19 @@ def _connect():
 
 
 def get_db():
-    """Open a connection whose rows can be read by column name."""
-    conn = _connect()
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    """Open a connection whose rows can be read by column name.
+
+    Deliberately does NOT run "PRAGMA foreign_keys = ON" on every
+    request any more: against the shared cloud database every extra
+    statement is a network round trip, and none of this service's
+    request-time operations (read a user, insert a user + profile,
+    update a password) depend on foreign-key enforcement - the
+    inserts use ids that were just created or checked in the same
+    request. Table setup (init_db, below) still sets the pragma on
+    its own connection, and the Express app sets it on its side,
+    where the cascading deletes live.
+    """
+    return _connect()
 
 
 # The same 11 CREATE TABLE statements as models.js (IF NOT EXISTS, so
@@ -542,46 +570,54 @@ def change_password():
             "/login?kind=danger&msg="
             + quote("Please login first to change your password.")
         )
-    user = load_user(payload["uid"])
-    if user is None or not user["is_active"]:
-        return redirect(
-            "/login?kind=danger&msg="
-            + quote("Account not found or blocked. Please contact admin.")
-        )
 
-    message = ""
-    kind = "info"
-    if request.method == "POST":
-        current = request.form.get("current_password", "")
-        new = request.form.get("new_password", "")
-        confirm = request.form.get("confirm_password", "")
+    # ONE connection for the whole request: the user row is read from
+    # it and, on a successful POST, the password UPDATE is written
+    # through it too. This used to open a second connection (load_user
+    # + a fresh get_db) - against the shared cloud database each new
+    # connection's first statement is another round trip.
+    conn = get_db()
+    try:
+        user = conn.execute(
+            "SELECT * FROM users WHERE id = ?", (payload["uid"],)
+        ).fetchone()
+        if user is None or not user["is_active"]:
+            return redirect(
+                "/login?kind=danger&msg="
+                + quote("Account not found or blocked. Please contact admin.")
+            )
 
-        if not check_password_hash(user["password_hash"], current):
-            message, kind = "Current password is incorrect.", "danger"
-        elif len(new) < 6:
-            message, kind = "New password must be at least 6 characters long.", "danger"
-        elif new != confirm:
-            message, kind = "New password and confirm password do not match.", "danger"
-        else:
-            conn = get_db()
-            try:
+        message = ""
+        kind = "info"
+        if request.method == "POST":
+            current = request.form.get("current_password", "")
+            new = request.form.get("new_password", "")
+            confirm = request.form.get("confirm_password", "")
+
+            if not check_password_hash(user["password_hash"], current):
+                message, kind = "Current password is incorrect.", "danger"
+            elif len(new) < 6:
+                message, kind = "New password must be at least 6 characters long.", "danger"
+            elif new != confirm:
+                message, kind = "New password and confirm password do not match.", "danger"
+            else:
                 conn.execute(
                     "UPDATE users SET password_hash = ? WHERE id = ?",
                     (generate_password_hash(new), user["id"]),
                 )
                 conn.commit()
-            finally:
-                conn.close()
-            # Back to the Express app (the same token is still valid)
-            return redirect(
-                f"{APP_URL}/auth/callback?token={token}&msg="
-                + quote("Password changed successfully.")
-            )
+                # Back to the Express app (the same token is still valid)
+                return redirect(
+                    f"{APP_URL}/auth/callback?token={token}&msg="
+                    + quote("Password changed successfully.")
+                )
 
-    return render_template(
-        "change_password.html", user=user, token=token,
-        message=message, kind=kind,
-    )
+        return render_template(
+            "change_password.html", user=user, token=token,
+            message=message, kind=kind,
+        )
+    finally:
+        conn.close()
 
 
 # ---------------------------------------------------------------------------

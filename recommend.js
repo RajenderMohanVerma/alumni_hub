@@ -23,8 +23,8 @@
  *   recommendPeople(db, currentUser, k = 6)  -> people suggestions
  *   recommendJobs(db, currentUser, k = 3)    -> job suggestions
  * Both also accept the caller's already-loaded profile row as an
- * optional last argument, so it is never fetched twice. Candidate
- * profiles are bulk-loaded (one query per profile table) and scored
+ * optional last argument, so it is never fetched twice. Candidates
+ * and their profiles are loaded with a single JOIN query and scored
  * in memory - the scores are identical to the old one-query-per-
  * person version, just with far fewer database round trips.
  * Both return objects with a ready-to-show matchPercent (0-100) and a
@@ -180,23 +180,48 @@ function featuresFor(db, user) {
 }
 
 /**
- * Load EVERY profile row of all three role tables in three queries
- * total (one per table), as per-role Maps keyed by user_id. Scoring a
- * whole member list from these maps gives exactly the same features
- * as one getProfile() call per person - but against the shared cloud
- * database each of those calls is a network round trip, so the
- * per-person version made the dashboard slower with every new member.
+ * Split one row of the candidates JOIN query (see recommendPeople)
+ * back into the plain user object + role-profile object (or null)
+ * that the old two-step loading produced. The JOIN prefixes are:
+ * s_ = student_profile, a_ = alumni_profile, f_ = faculty_profile.
+ * A member has exactly one role, so at most one profile can exist;
+ * the *_uid marker tells whether that profile row is really there
+ * (all its other columns would be NULL as well when it is not).
  */
-function bulkProfiles(db) {
-  const byRole = {};
-  for (const [role, table] of Object.entries(models.PROFILE_TABLES)) {
-    const map = new Map();
-    for (const row of db.prepare(`SELECT * FROM ${table}`).all()) {
-      map.set(row.user_id, row);
-    }
-    byRole[role] = map;
+function splitCandidateRow(row) {
+  const user = {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role,
+    phone: row.phone,
+    profile_pic: row.profile_pic,
+    is_active: row.is_active,
+    created_at: row.created_at,
+    has_photo: row.has_photo,
+    photo_updated_at: row.photo_updated_at,
+  };
+  let profile = null;
+  if (row.role === "student" && row.s_uid != null) {
+    profile = {
+      user_id: row.s_uid, course: row.s_course, branch: row.s_branch,
+      year: row.s_year, skills: row.s_skills, bio: row.s_bio,
+    };
+  } else if (row.role === "alumni" && row.a_uid != null) {
+    profile = {
+      user_id: row.a_uid, company: row.a_company,
+      designation: row.a_designation, experience: row.a_experience,
+      skills: row.a_skills, bio: row.a_bio,
+    };
+  } else if (row.role === "faculty" && row.f_uid != null) {
+    profile = {
+      user_id: row.f_uid, department: row.f_department,
+      designation: row.f_designation,
+      qualification: row.f_qualification, skills: row.f_skills,
+      bio: row.f_bio,
+    };
   }
-  return byRole;
+  return { user, profile };
 }
 
 /**
@@ -331,25 +356,42 @@ function recommendPeople(db, currentUser, k = 6, currentProfile) {
     excluded.add(link.receiver_id);
   }
 
-  const candidates = db
+  // Candidates AND their profiles in ONE query: users LEFT JOINed
+  // with all three profile tables. This replaces a candidates query
+  // plus one full-table query per profile table (4 round trips ->
+  // 1); splitCandidateRow restores the exact user / profile shapes
+  // the old loading produced, so the scoring below is unchanged.
+  const candidateRows = db
     .prepare(
-      `SELECT id, name, email, role, phone, profile_pic, is_active,
-              created_at, (photo_data IS NOT NULL) AS has_photo,
-              photo_updated_at
-         FROM users WHERE is_active = 1 AND role != 'admin' ORDER BY name`
+      `SELECT u.id, u.name, u.email, u.role, u.phone, u.profile_pic,
+              u.is_active, u.created_at,
+              (u.photo_data IS NOT NULL) AS has_photo,
+              u.photo_updated_at,
+              sp.user_id AS s_uid, sp.course AS s_course,
+              sp.branch AS s_branch, sp.year AS s_year,
+              sp.skills AS s_skills, sp.bio AS s_bio,
+              ap.user_id AS a_uid, ap.company AS a_company,
+              ap.designation AS a_designation,
+              ap.experience AS a_experience, ap.skills AS a_skills,
+              ap.bio AS a_bio,
+              fp.user_id AS f_uid, fp.department AS f_department,
+              fp.designation AS f_designation,
+              fp.qualification AS f_qualification,
+              fp.skills AS f_skills, fp.bio AS f_bio
+         FROM users u
+         LEFT JOIN student_profile sp ON sp.user_id = u.id
+         LEFT JOIN alumni_profile ap ON ap.user_id = u.id
+         LEFT JOIN faculty_profile fp ON fp.user_id = u.id
+        WHERE u.is_active = 1 AND u.role != 'admin'
+        ORDER BY u.name`
     )
     .all();
 
-  // All candidate profiles in 3 queries total (see bulkProfiles) -
-  // the scoring below reads them from memory, unchanged.
-  const profiles = bulkProfiles(db);
   const scored = [];
-  for (const user of candidates) {
-    if (excluded.has(user.id)) continue;
-    const features = extractFeatures(
-      user,
-      (profiles[user.role] && profiles[user.role].get(user.id)) || null
-    );
+  for (const row of candidateRows) {
+    if (excluded.has(row.id)) continue;
+    const { user, profile } = splitCandidateRow(row);
+    const features = extractFeatures(user, profile);
     const { score, reasons } = similarity(me, features);
     if (score <= 0) continue; // nothing in common at all
     scored.push({
@@ -388,24 +430,24 @@ function recommendJobs(db, currentUser, k = 3, currentProfile) {
   }
   if (!keywords.size) return [];
 
-  const appliedIds = new Set(
-    db.prepare("SELECT job_id FROM applications WHERE student_id = ?")
-      .all(currentUser.id)
-      .map((row) => row.job_id)
-  );
-
+  // Jobs the student already applied to are filtered out inside the
+  // query itself (NOT IN subquery) - this used to cost a separate
+  // "my applications" query plus an in-memory skip per job; the job
+  // list that reaches the scoring loop is exactly the same.
   const jobs = db
     .prepare(
       `SELECT jobs.*, users.name AS poster_name FROM jobs
          JOIN users ON users.id = jobs.alumni_id
         WHERE jobs.alumni_id != ?
+          AND jobs.id NOT IN (
+            SELECT job_id FROM applications WHERE student_id = ?
+          )
         ORDER BY jobs.id DESC`
     )
-    .all(currentUser.id);
+    .all(currentUser.id, currentUser.id);
 
   const scored = [];
   for (const job of jobs) {
-    if (appliedIds.has(job.id)) continue;
     const text = [job.title, job.company, job.location, job.description]
       .filter(Boolean)
       .join(" ")

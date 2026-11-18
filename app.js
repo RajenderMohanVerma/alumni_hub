@@ -57,8 +57,29 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Files in public/ (CSS, JS, images) are served directly
-app.use(express.static(path.join(__dirname, "public")));
+// Files in public/ (CSS, JS, images) are served directly.
+// Cache policy for the code/image assets: they may be reused for an
+// hour without asking the server again, and for a day after that a
+// stale copy may be shown while a fresh one is fetched in the
+// background (stale-while-revalidate) - so repeat visits are fast,
+// yet a redesign is never pinned away for days. sw.js and
+// manifest.json are deliberately NOT covered: the service worker
+// must always revalidate so PWA updates land at once. (On Vercel
+// the platform serves public/ itself; the same policy is declared
+// in vercel.json - this covers local / self-hosted runs.)
+const ASSET_CACHE_CONTROL =
+  "public, max-age=3600, stale-while-revalidate=86400";
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    setHeaders(res, filePath) {
+      // sw.js ends in .js but must NEVER get this policy (see above)
+      if (path.basename(filePath) === "sw.js") return;
+      if (/\.(css|js|svg|png|jpe?g|ico|woff2?)$/i.test(filePath)) {
+        res.setHeader("Cache-Control", ASSET_CACHE_CONTROL);
+      }
+    },
+  })
+);
 
 // Create the tables and the upload folder if they do not exist yet
 models.initDb();
@@ -393,12 +414,23 @@ function emptyToNull(value) {
 // Home page - platform statistics + latest 3 jobs
 app.get("/", (req, res) => {
   const db = models.openDb();
-  const count = (sql) => db.prepare(sql).get().c;
+  // All four headline numbers in ONE statement (scalar subqueries) -
+  // four separate COUNT queries cost four network round trips against
+  // the shared cloud database for the exact same numbers.
+  const row = db
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM users WHERE role = 'student') AS students,
+         (SELECT COUNT(*) FROM users WHERE role = 'alumni') AS alumni,
+         (SELECT COUNT(*) FROM users WHERE role = 'faculty') AS faculty,
+         (SELECT COUNT(*) FROM jobs) AS jobs`
+    )
+    .get();
   const stats = {
-    students: count("SELECT COUNT(*) AS c FROM users WHERE role = 'student'"),
-    alumni: count("SELECT COUNT(*) AS c FROM users WHERE role = 'alumni'"),
-    faculty: count("SELECT COUNT(*) AS c FROM users WHERE role = 'faculty'"),
-    jobs: count("SELECT COUNT(*) AS c FROM jobs"),
+    students: row.students,
+    alumni: row.alumni,
+    faculty: row.faculty,
+    jobs: row.jobs,
   };
   const latestJobs = db
     .prepare(
@@ -607,22 +639,30 @@ app.get("/dashboard", requireAuth, (req, res) => {
   // not fetch it a second time (see recommend.js).
   const suggestions = recommend.recommendPeople(db, user, 6, profile);
   const profileComplete = profileCompleteness(user, profile);
-  const count = (sql, ...params) => db.prepare(sql).get(...params).c;
+  // Each role's four headline numbers are fetched with ONE statement
+  // (scalar subqueries) instead of four separate COUNT queries - the
+  // numbers are identical, but against the shared cloud database each
+  // saved statement is a saved network round trip.
   let stats;
 
   if (user.role === "student") {
+    const row = db
+      .prepare(
+        `SELECT
+           (SELECT COUNT(*) FROM connections
+             WHERE status = 'accepted'
+               AND (sender_id = ? OR receiver_id = ?)) AS connections,
+           (SELECT COUNT(*) FROM jobs) AS jobs,
+           (SELECT COUNT(*) FROM applications
+             WHERE student_id = ?) AS applications,
+           (SELECT COUNT(*) FROM announcements) AS announcements`
+      )
+      .get(user.id, user.id, user.id);
     stats = {
-      connections: count(
-        `SELECT COUNT(*) AS c FROM connections
-          WHERE status = 'accepted' AND (sender_id = ? OR receiver_id = ?)`,
-        user.id, user.id
-      ),
-      jobs: count("SELECT COUNT(*) AS c FROM jobs"),
-      applications: count(
-        "SELECT COUNT(*) AS c FROM applications WHERE student_id = ?",
-        user.id
-      ),
-      announcements: count("SELECT COUNT(*) AS c FROM announcements"),
+      connections: row.connections,
+      jobs: row.jobs,
+      applications: row.applications,
+      announcements: row.announcements,
     };
     const jobSuggestions = recommend.recommendJobs(db, user, 3, profile);
     return res.render("dashboard_student", {
@@ -631,22 +671,24 @@ app.get("/dashboard", requireAuth, (req, res) => {
   }
 
   if (user.role === "alumni") {
+    const row = db
+      .prepare(
+        `SELECT
+           (SELECT COUNT(*) FROM connections
+             WHERE status = 'accepted'
+               AND (sender_id = ? OR receiver_id = ?)) AS connections,
+           (SELECT COUNT(*) FROM jobs WHERE alumni_id = ?) AS myJobs,
+           (SELECT COUNT(*) FROM applications
+              JOIN jobs ON jobs.id = applications.job_id
+             WHERE jobs.alumni_id = ?) AS applicants,
+           (SELECT COUNT(*) FROM announcements) AS announcements`
+      )
+      .get(user.id, user.id, user.id, user.id);
     stats = {
-      connections: count(
-        `SELECT COUNT(*) AS c FROM connections
-          WHERE status = 'accepted' AND (sender_id = ? OR receiver_id = ?)`,
-        user.id, user.id
-      ),
-      myJobs: count(
-        "SELECT COUNT(*) AS c FROM jobs WHERE alumni_id = ?", user.id
-      ),
-      applicants: count(
-        `SELECT COUNT(*) AS c FROM applications
-          JOIN jobs ON jobs.id = applications.job_id
-          WHERE jobs.alumni_id = ?`,
-        user.id
-      ),
-      announcements: count("SELECT COUNT(*) AS c FROM announcements"),
+      connections: row.connections,
+      myJobs: row.myJobs,
+      applicants: row.applicants,
+      announcements: row.announcements,
     };
     return res.render("dashboard_alumni", {
       profile, stats, suggestions, profileComplete,
@@ -654,14 +696,21 @@ app.get("/dashboard", requireAuth, (req, res) => {
   }
 
   // faculty
+  const row = db
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM users WHERE role = 'student') AS students,
+         (SELECT COUNT(*) FROM users WHERE role = 'alumni') AS alumni,
+         (SELECT COUNT(*) FROM announcements
+           WHERE faculty_id = ?) AS myAnnouncements,
+         (SELECT COUNT(*) FROM announcements) AS announcements`
+    )
+    .get(user.id);
   stats = {
-    students: count("SELECT COUNT(*) AS c FROM users WHERE role = 'student'"),
-    alumni: count("SELECT COUNT(*) AS c FROM users WHERE role = 'alumni'"),
-    myAnnouncements: count(
-      "SELECT COUNT(*) AS c FROM announcements WHERE faculty_id = ?",
-      user.id
-    ),
-    announcements: count("SELECT COUNT(*) AS c FROM announcements"),
+    students: row.students,
+    alumni: row.alumni,
+    myAnnouncements: row.myAnnouncements,
+    announcements: row.announcements,
   };
   return res.render("dashboard_faculty", { profile, stats, suggestions });
 });
@@ -836,10 +885,34 @@ app.get("/search", requireAuth, (req, res) => {
       }
     });
 
-  // connection status of the logged-in user with every listed member
+  // Connection status of the logged-in user with every listed member.
+  // This used to call connectionStatus() once per member - one extra
+  // database round trip per card on the page. Now ALL of the user's
+  // connection rows are loaded with a single query and the statuses
+  // are worked out in memory. The result is identical: rows arrive in
+  // id order and the FIRST row for a pair wins, exactly like the
+  // single-row .get() in connectionStatus().
+  const memberIds = new Set(members.map((m) => m.id));
+  const links = db
+    .prepare(
+      `SELECT sender_id, receiver_id, status FROM connections
+        WHERE sender_id = ? OR receiver_id = ? ORDER BY id`
+    )
+    .all(req.user.id, req.user.id);
   const statuses = {};
+  for (const link of links) {
+    const otherId =
+      link.sender_id === req.user.id ? link.receiver_id : link.sender_id;
+    if (!memberIds.has(otherId) || otherId in statuses) continue;
+    if (link.status === "accepted") statuses[otherId] = "accepted";
+    else if (link.status === "rejected") statuses[otherId] = "rejected";
+    else {
+      statuses[otherId] =
+        link.sender_id === req.user.id ? "pending_sent" : "pending_received";
+    }
+  }
   for (const m of members) {
-    statuses[m.id] = connectionStatus(db, req.user.id, m.id);
+    if (!(m.id in statuses)) statuses[m.id] = "none";
   }
   res.render("search", { members, role, statuses, counts });
 });
@@ -1105,17 +1178,16 @@ app.post("/jobs/new", requireAuth, requireRole("alumni"), (req, res) => {
       emptyToNull(req.body.description),
       emptyToNull(req.body.deadline)
     );
-  // Tell every student about the new job
-  const students = db
-    .prepare("SELECT id FROM users WHERE role = 'student' AND is_active = 1")
-    .all();
-  for (const s of students) {
-    models.createNotification(
-      s.id,
-      `New job posted: ${req.body.title} at ${req.body.company}`,
-      "/jobs/" + info.lastInsertRowid
-    );
-  }
+  // Tell every student about the new job - with ONE INSERT ... SELECT
+  // instead of a SELECT plus one INSERT per student (the fan-out grew
+  // with every new student; the rows written are exactly the same).
+  db.prepare(
+    `INSERT INTO notifications (user_id, text, link)
+     SELECT id, ?, ? FROM users WHERE role = 'student' AND is_active = 1`
+  ).run(
+    `New job posted: ${req.body.title} at ${req.body.company}`,
+    "/jobs/" + info.lastInsertRowid
+  );
   flashRedirect(res, "success", "Job posted successfully.");
   res.redirect("/jobs");
 });
@@ -1350,16 +1422,30 @@ app.get("/notifications", requireAuth, (req, res) => {
 // Admin dashboard - totals + data for the Chart.js bar chart
 app.get("/admin", requireAuth, requireRole("admin"), (req, res) => {
   const db = models.openDb();
-  const count = (sql) => db.prepare(sql).get().c;
+  // All eight headline numbers in ONE statement (scalar subqueries)
+  // instead of eight separate COUNT queries / round trips.
+  const row = db
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM users) AS total_users,
+         (SELECT COUNT(*) FROM users WHERE role = 'student') AS students,
+         (SELECT COUNT(*) FROM users WHERE role = 'alumni') AS alumni,
+         (SELECT COUNT(*) FROM users WHERE role = 'faculty') AS faculty,
+         (SELECT COUNT(*) FROM jobs) AS jobs,
+         (SELECT COUNT(*) FROM applications) AS applications,
+         (SELECT COUNT(*) FROM announcements) AS announcements,
+         (SELECT COUNT(*) FROM contact_messages) AS contact_messages`
+    )
+    .get();
   const counts = {
-    total_users: count("SELECT COUNT(*) AS c FROM users"),
-    students: count("SELECT COUNT(*) AS c FROM users WHERE role = 'student'"),
-    alumni: count("SELECT COUNT(*) AS c FROM users WHERE role = 'alumni'"),
-    faculty: count("SELECT COUNT(*) AS c FROM users WHERE role = 'faculty'"),
-    jobs: count("SELECT COUNT(*) AS c FROM jobs"),
-    applications: count("SELECT COUNT(*) AS c FROM applications"),
-    announcements: count("SELECT COUNT(*) AS c FROM announcements"),
-    contact_messages: count("SELECT COUNT(*) AS c FROM contact_messages"),
+    total_users: row.total_users,
+    students: row.students,
+    alumni: row.alumni,
+    faculty: row.faculty,
+    jobs: row.jobs,
+    applications: row.applications,
+    announcements: row.announcements,
+    contact_messages: row.contact_messages,
   };
   res.render("admin/dashboard", { counts });
 });
