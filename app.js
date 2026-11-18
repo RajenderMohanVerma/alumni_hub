@@ -8,7 +8,8 @@
  * Alumni Hub is a HYBRID app:
  *   - THIS Express app serves almost every page: home, dashboards,
  *     profiles, member search, connections, chat, jobs, announcements,
- *     notifications and the admin panel.
+ *     notifications, the FAQ page and the admin panel. Dashboards show
+ *     KNN-based "Suggested for You" recommendations (see recommend.js).
  *   - A small Flask service (auth_service/auth.py) handles ONLY login,
  *     register and change-password, because password hashing (Werkzeug
  *     scrypt) is kept 100% in Python. This app NEVER checks a password.
@@ -43,6 +44,7 @@ const multer = require("multer");
 
 const config = require("./config");
 const models = require("./models");
+const recommend = require("./recommend");
 
 // ===========================================================================
 // 1. Setup
@@ -225,6 +227,7 @@ function computeNavSection(p) {
   if (p === "/about") return "about";
   if (p === "/services") return "services";
   if (p === "/contact") return "contact";
+  if (p === "/faq") return "faq";
   if (p === "/dashboard") return "dashboard";
   if (p === "/search" || p.startsWith("/profile")) return "members";
   if (p === "/connections") return "connections";
@@ -351,6 +354,9 @@ app.get("/about", (req, res) => res.render("about"));
 // Services page - what the platform offers (static content)
 app.get("/services", (req, res) => res.render("services"));
 
+// FAQ page - common questions, answered (static content)
+app.get("/faq", (req, res) => res.render("faq"));
+
 // Contact page - the form saves messages for the admin to read
 app.get("/contact", (req, res) => res.render("contact"));
 
@@ -453,13 +459,45 @@ app.get("/logout", (req, res) => {
 // ===========================================================================
 // 7. Dashboard + profiles
 // ===========================================================================
-// Dashboard - a different page (and different numbers) per role
+/**
+ * How complete is a profile, as a percentage? Eight things are checked:
+ * name, phone and photo (users table) + bio and skills + the three
+ * role-specific fields of the role's profile table. Shown as a progress
+ * meter on the student / alumni dashboards.
+ */
+function profileCompleteness(user, profile) {
+  const roleFields = {
+    student: ["course", "branch", "year"],
+    alumni: ["company", "designation", "experience"],
+    faculty: ["department", "designation", "qualification"],
+  };
+  const filled = (value) => (value && String(value).trim() ? 1 : 0);
+  let done = filled(user.name) + filled(user.phone) + filled(user.profile_pic);
+  let total = 3;
+  if (profile) {
+    done += filled(profile.bio) + filled(profile.skills);
+    total += 2;
+    for (const field of roleFields[user.role] || []) {
+      done += filled(profile[field]);
+      total += 1;
+    }
+  } else {
+    total += 2 + (roleFields[user.role] || []).length;
+  }
+  return Math.round((done / total) * 100);
+}
+
+// Dashboard - a different page (and different numbers) per role.
+// Every dashboard also gets KNN recommendations (see recommend.js):
+// "Suggested for You" people, and for students also matching jobs.
 app.get("/dashboard", requireAuth, (req, res) => {
   const db = models.openDb();
   const user = req.user;
   if (user.role === "admin") return res.redirect("/admin");
 
   const profile = models.getProfile(user.id, user.role);
+  const suggestions = recommend.recommendPeople(db, user, 6);
+  const profileComplete = profileCompleteness(user, profile);
   const count = (sql, ...params) => db.prepare(sql).get(...params).c;
   let stats;
 
@@ -477,7 +515,10 @@ app.get("/dashboard", requireAuth, (req, res) => {
       ),
       announcements: count("SELECT COUNT(*) AS c FROM announcements"),
     };
-    return res.render("dashboard_student", { profile, stats });
+    const jobSuggestions = recommend.recommendJobs(db, user, 3);
+    return res.render("dashboard_student", {
+      profile, stats, suggestions, jobSuggestions, profileComplete,
+    });
   }
 
   if (user.role === "alumni") {
@@ -498,7 +539,9 @@ app.get("/dashboard", requireAuth, (req, res) => {
       ),
       announcements: count("SELECT COUNT(*) AS c FROM announcements"),
     };
-    return res.render("dashboard_alumni", { profile, stats });
+    return res.render("dashboard_alumni", {
+      profile, stats, suggestions, profileComplete,
+    });
   }
 
   // faculty
@@ -511,7 +554,7 @@ app.get("/dashboard", requireAuth, (req, res) => {
     ),
     announcements: count("SELECT COUNT(*) AS c FROM announcements"),
   };
-  return res.render("dashboard_faculty", { profile, stats });
+  return res.render("dashboard_faculty", { profile, stats, suggestions });
 });
 
 // Edit own profile - basic details + role details + profile picture

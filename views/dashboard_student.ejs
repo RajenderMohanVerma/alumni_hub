@@ -44,6 +44,54 @@
   </div>
 </div>
 
+<%- include('partials/suggestions') %>
+
+<!-- ============ RECOMMENDED JOBS FOR YOU (KNN-matched) ============ -->
+<section class="mb-4">
+  <h4 class="section-title"><i class="bi bi-briefcase text-success"></i> Recommended Jobs for You</h4>
+  <% if (jobSuggestions && jobSuggestions.length) { %>
+  <div class="row g-3">
+    <% jobSuggestions.forEach(function(r) { %>
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm job-card">
+        <div class="card-body">
+          <h5 class="card-title fw-semibold"><%= r.job.title %></h5>
+          <p class="card-subtitle text-muted mb-2">
+            <i class="bi bi-building"></i> <%= r.job.company %>
+            <% if (r.job.location) { %> · <i class="bi bi-geo-alt"></i> <%= r.job.location %><% } %>
+          </p>
+          <p class="mb-2">
+            <span class="badge bg-success-subtle text-success-emphasis">
+              <i class="bi bi-stars"></i> <%= r.matchPercent %>% match
+            </span>
+          </p>
+          <p class="card-text text-muted small mb-0">
+            <i class="bi bi-check2-circle text-success"></i> <%= r.reason %>
+          </p>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+          <span class="badge bg-light text-dark border">
+            <i class="bi bi-calendar-event"></i> <%= dateformat(r.job.deadline) %>
+          </span>
+          <a href="/jobs/<%= r.job.id %>" class="btn btn-primary btn-sm">View &amp; Apply</a>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <div class="card shadow-sm">
+    <div class="card-body text-muted">
+      No job matches yet — add your skills in
+      <a href="/profile/edit">Edit Profile</a> and browse the
+      <a href="/jobs">Job Board</a>.
+    </div>
+  </div>
+  <% } %>
+</section>
+
+<%- include('partials/profile_meter') %>
+
 <div class="row g-3">
   <div class="col-md-4"><a href="/search" class="text-decoration-none">
     <div class="card action-card shadow-sm h-100"><div class="card-body">

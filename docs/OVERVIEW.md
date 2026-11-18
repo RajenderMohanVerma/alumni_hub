@@ -84,4 +84,16 @@ single, simple system that keeps all three groups connected.
   and an inbox for messages sent from the Contact page
 - **Public Pages** — Home (live statistics with count-up animation, latest
   jobs), About (mission & vision), Services, Contact (form saved to the
-  database), a common rich footer on every page
+  database), FAQ (accordion of common questions), a common rich footer on
+  every page
+- **Recommendations (KNN)** — every dashboard shows "Suggested for You":
+  the K most similar members (course/domain, skills, interests, batch,
+  city) with a match % and plain-language reasons; students also get
+  skill-matched job suggestions. See `docs/RECOMMENDER.md`
+- **Profile Completeness** — a progress meter on the student/alumni
+  dashboards showing how much of the profile is filled; a fuller profile
+  produces better recommendations
+- **Mobile & PWA** — installable on phones (web app manifest + service
+  worker, "Install Alumni Hub" prompt, home-screen icon), an app-style
+  bottom navigation bar for logged-in users on small screens, job
+  location filter chips and member sorting

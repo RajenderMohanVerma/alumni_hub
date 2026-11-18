@@ -1,0 +1,52 @@
+<!-- ============ SUGGESTED FOR YOU (KNN recommendations) ============
+     People most similar to the logged-in user, computed by
+     recommend.js: same domain, shared skills/interests, close batch.
+     Every card shows the match % and the top reasons, so the
+     suggestion is never a mystery. -->
+<section class="mb-4">
+  <h4 class="section-title"><i class="bi bi-stars text-primary"></i> Suggested for You</h4>
+  <% if (suggestions && suggestions.length) { %>
+  <div class="row g-3">
+    <% suggestions.forEach(function(s) { %>
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm member-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <img src="<%= avatarUrl(s.user) %>" alt="avatar" class="member-avatar">
+            <div>
+              <h5 class="card-title mb-0">
+                <a href="/profile/<%= s.user.id %>" class="text-decoration-none"><%= s.user.name %></a>
+              </h5>
+              <span class="badge bg-<%= s.user.role === 'student' ? 'primary' : (s.user.role === 'alumni' ? 'success' : 'warning text-dark') %>"><%= capitalize(s.user.role) %></span>
+              <span class="badge bg-primary-subtle text-primary-emphasis">
+                <i class="bi bi-stars"></i> <%= s.matchPercent %>% match
+              </span>
+            </div>
+          </div>
+          <% if (s.reasons.length) { %>
+          <div class="mb-3">
+            <% s.reasons.slice(0, 3).forEach(function(reason) { %>
+            <span class="badge bg-light text-dark border me-1 mb-1"><%= reason %></span>
+            <% }) %>
+          </div>
+          <% } %>
+          <form method="post" action="/connect/<%= s.user.id %>">
+            <button class="btn btn-primary btn-sm w-100" type="submit">
+              <i class="bi bi-person-plus"></i> Connect
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <div class="card shadow-sm">
+    <div class="card-body text-muted">
+      <i class="bi bi-stars"></i> No suggestions yet —
+      <a href="/profile/edit">complete your profile</a> (add your skills,
+      bio and a photo) and we will find members who match you.
+    </div>
+  </div>
+  <% } %>
+</section>

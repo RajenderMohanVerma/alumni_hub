@@ -57,6 +57,17 @@ project. Status: ✅ Done · 🔄 Partial · ⬜ Not planned (future scope)
 | 50 | Deployment | Vercel support in both services: DB/uploads in `/tmp` + auto-seed on cold start | ✅ Done |
 | 51 | **Documentation** | Main `README.md` + full `docs/` folder (this documentation) | ✅ Done |
 | 55 | **Hybrid Conversion** | Main app converted to JavaScript (Node/Express/EJS); Python kept only as the Flask auth service + `seed.py` | ✅ Done |
+| 56 | **UI Upgrade** | Animated hero (pattern + shine), section-heading accents, hover-lift cards, sticky navbar with scroll shadow, page-load fade-in, back-to-top button | ✅ Done |
+| 57 | UI Upgrade | Mobile bottom navigation bar (logged-in, small screens) with unread chat badge + active-section highlight | ✅ Done |
+| 58 | **Recommendations** | KNN engine in `recommend.js`: weighted similarity (domain 0.30, skills 0.30, interests 0.15, batch 0.15, city 0.10) + student mentor boost; connected/pending members excluded | ✅ Done |
+| 59 | Recommendations | "Suggested for You" people cards (match % + reason chips + Connect) on student / alumni / faculty dashboards; "Recommended Jobs for You" for students | ✅ Done |
+| 60 | Recommendations | Explanation document `docs/RECOMMENDER.md` with a worked example on the demo data | ✅ Done |
+| 61 | **Profiles** | Profile-completeness meter (server-side %) with animated progress bar on student / alumni dashboards | ✅ Done |
+| 62 | **Job Portal** | Location filter chips on the job list, working together with live search | ✅ Done |
+| 63 | **Member Directory** | Sort dropdown (Name A–Z / Newest first), client-side, works with live search | ✅ Done |
+| 64 | **Public Pages** | FAQ page (`/faq`) with accordion; linked from footer, Contact page and the auth-service footer | ✅ Done |
+| 65 | **PWA** | `manifest.json` + generated app icons (192/512/apple-touch) + `sw.js` service worker (cache-first static, network-first pages) | ✅ Done |
+| 66 | PWA | "Install Alumni Hub" bottom-sheet prompt on phones: `beforeinstallprompt` flow, iOS instructions fallback, 7-day dismissal memory, never on desktop / when installed | ✅ Done |
 | 52 | Future Scope | Email OTP / password reset by email | ⬜ Not planned |
 | 53 | Future Scope | Real-time chat with WebSockets | ⬜ Not planned |
 | 54 | Future Scope | Cloud database (PostgreSQL) for permanent hosting | ⬜ Not planned |

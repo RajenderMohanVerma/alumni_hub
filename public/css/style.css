@@ -367,3 +367,453 @@ html.js .reveal.visible {
     font-weight: 600;
     font-size: 0.9rem;
 }
+
+/* ==========================================================================
+   UPGRADE PASS - professional polish, mobile nav, install banner
+   ========================================================================== */
+
+/* ---------- Page-load animation ----------
+   The main content fades/slides in once when a page opens. */
+main {
+    animation: pageIn 0.45s ease both;
+}
+
+@keyframes pageIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Navbar: deeper shadow once the page is scrolled ----------
+   (main.js adds .scrolled to #mainNavbar; the navbar is sticky-top) */
+#mainNavbar {
+    transition: box-shadow 0.25s ease;
+}
+
+#mainNavbar.scrolled {
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28) !important;
+}
+
+/* Underline grow effect for the real navbar links (same idea as the
+   .navbar-ah rules above, applied to the navbar the pages actually use) */
+#mainNavbar .nav-link {
+    position: relative;
+}
+
+#mainNavbar .nav-link:not(.dropdown-toggle)::after {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.3rem;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+}
+
+#mainNavbar .nav-link:not(.dropdown-toggle):hover::after,
+#mainNavbar .nav-link:not(.dropdown-toggle).active::after {
+    transform: scaleX(1);
+}
+
+/* Notification / chat count badges sit on the corner of the nav icon */
+.badge-dot {
+    position: absolute;
+    top: 0.15rem;
+    right: 0;
+    transform: translateX(35%);
+    font-size: 0.62rem;
+    padding: 0.22em 0.45em;
+}
+
+/* ---------- Hero: dot pattern, shine and bigger type ---------- */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+/* faint dot pattern over the animated gradient */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.5px, transparent 1.6px);
+    background-size: 22px 22px;
+    pointer-events: none;
+}
+
+/* soft diagonal shine in the top-right corner */
+.hero::after {
+    content: "";
+    position: absolute;
+    top: -60%;
+    right: -15%;
+    width: 55%;
+    height: 220%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.13), transparent);
+    transform: rotate(8deg);
+    pointer-events: none;
+}
+
+.hero .row {
+    position: relative;
+    z-index: 1;
+}
+
+.hero h1 {
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 12px rgba(15, 23, 42, 0.25);
+}
+
+@media (min-width: 992px) {
+    .hero h1 { font-size: 3.4rem; }
+}
+
+.hero-icon {
+    font-size: 9rem;
+    opacity: 0.28;
+    filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.3));
+}
+
+/* ---------- Section headings with a coloured underline accent ---------- */
+.section-title {
+    position: relative;
+    font-weight: 700;
+    padding-bottom: 0.45rem;
+    margin-bottom: 1rem;
+}
+
+.section-title::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 54px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--ah-primary), var(--ah-sky));
+}
+
+.section-title-center {
+    position: relative;
+    padding-bottom: 0.55rem;
+}
+
+.section-title-center::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 54px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--ah-primary), var(--ah-sky));
+}
+
+/* ---------- Card hover lift (feature / action / member / job cards) --- */
+.feature-card,
+.action-card,
+.member-card,
+.job-card {
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.feature-card:hover,
+.action-card:hover,
+.member-card:hover,
+.job-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.13) !important;
+}
+
+.feature-icon {
+    font-size: 2.1rem;
+    display: inline-block;
+    margin-bottom: 0.6rem;
+}
+
+/* Member photos in cards (directory, suggestions, chat lists) */
+.member-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+/* Buttons: a gentle lift on hover everywhere */
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* ---------- Footer polish (classes the footer actually uses) ---------- */
+.site-footer .footer-heading {
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.site-footer .footer-text {
+    color: #94a3b8;
+}
+
+.site-footer .footer-links a {
+    display: inline-block;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.site-footer .footer-links a:hover {
+    transform: translateX(3px);
+}
+
+.site-footer .social-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.site-footer .social-btn:hover {
+    background: var(--ah-primary);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* ---------- Job location filter chips ---------- */
+.filter-chip {
+    border: 1px solid var(--ah-primary);
+    background: #fff;
+    color: var(--ah-primary);
+    border-radius: 999px;
+    padding: 0.32rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-height: 36px;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.filter-chip:hover {
+    transform: translateY(-1px);
+    background: #eef4ff;
+}
+
+.filter-chip.active {
+    background: var(--ah-primary);
+    color: #fff;
+}
+
+/* ---------- Profile completeness meter ---------- */
+.profile-meter .progress {
+    height: 10px;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.profile-meter .progress-bar {
+    background: linear-gradient(90deg, var(--ah-primary), var(--ah-sky));
+    border-radius: 999px;
+    transition: width 1.2s ease;
+}
+
+/* ---------- Back-to-top button ---------- */
+.back-to-top {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1040;
+    width: 46px;
+    height: 46px;
+    border: none;
+    border-radius: 50%;
+    background: var(--ah-primary);
+    color: #fff;
+    font-size: 1.15rem;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.back-to-top:hover {
+    background: var(--ah-primary-dark);
+}
+
+/* ---------- Mobile bottom navigation (logged-in users, phones) ------- */
+.mobile-nav {
+    display: none; /* turned on by the media query below */
+}
+
+@media (max-width: 991.98px) {
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1050;
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.1);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .mobile-nav-link {
+        flex: 1;
+        min-height: 58px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.68rem;
+        font-weight: 600;
+        position: relative;
+        transition: color 0.2s ease;
+    }
+
+    .mobile-nav-link i {
+        font-size: 1.3rem;
+        line-height: 1;
+    }
+
+    .mobile-nav-link.active {
+        color: var(--ah-primary);
+    }
+
+    .mobile-nav-link.active::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 22%;
+        right: 22%;
+        height: 3px;
+        border-radius: 0 0 4px 4px;
+        background: var(--ah-primary);
+    }
+
+    .mobile-nav-badge {
+        position: absolute;
+        top: 6px;
+        left: calc(50% + 2px);
+        background: #dc2626;
+        color: #fff;
+        font-size: 0.6rem;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 0.1rem 0.38rem;
+        line-height: 1.2;
+    }
+
+    /* Keep page content (and the footer) clear of the fixed bar */
+    body.has-mobile-nav {
+        padding-bottom: 62px;
+    }
+
+    /* Back-to-top floats above the bottom bar on phones */
+    body.has-mobile-nav .back-to-top {
+        bottom: 4.6rem;
+    }
+}
+
+/* ---------- Install-app banner (PWA bottom sheet, phones only) ------- */
+.install-banner {
+    position: fixed;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    z-index: 1060;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
+    padding: 0.9rem 2.2rem 0.9rem 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transform: translateY(140%);
+    transition: transform 0.45s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+.install-banner.show {
+    transform: translateY(0);
+}
+
+/* When the mobile bottom nav is on screen, the sheet sits above it */
+@media (max-width: 991.98px) {
+    .install-banner.above-nav {
+        bottom: 4.6rem;
+    }
+}
+
+/* Never on desktop / larger tablets */
+@media (min-width: 768px) {
+    .install-banner {
+        display: none !important;
+    }
+}
+
+.install-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.install-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.install-text small {
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.install-steps {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #475569;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+}
+
+.install-close {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    font-size: 0.7rem;
+}
+
+/* ---------- Reduced motion: calm everything down ---------- */
+@media (prefers-reduced-motion: reduce) {
+    main { animation: none; }
+    .install-banner { transition: none; }
+    .feature-card, .action-card, .member-card, .job-card,
+    .btn, .filter-chip { transition: none; }
+    .feature-card:hover, .action-card:hover, .member-card:hover,
+    .job-card:hover, .btn:hover { transform: none; }
+}

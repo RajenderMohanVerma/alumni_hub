@@ -27,6 +27,7 @@
           <li><a href="/about">About Us</a></li>
           <li><a href="/services">Services</a></li>
           <li><a href="/contact">Contact</a></li>
+          <li><a href="/faq">FAQ</a></li>
           <% if (!currentUser) { %>
           <li><a href="/register">Register</a></li>
           <% } %>
@@ -62,6 +63,56 @@
     </div>
   </div>
 </footer>
+
+<% if (currentUser) { %>
+<!-- ================= MOBILE BOTTOM NAVIGATION =================
+     App-style bottom bar, only on small screens (CSS hides it on
+     desktop). main.js highlights the current section. -->
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a href="/dashboard" class="mobile-nav-link" data-nav="dashboard">
+    <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+  </a>
+  <a href="/search" class="mobile-nav-link" data-nav="members">
+    <i class="bi bi-people"></i><span>Members</span>
+  </a>
+  <a href="/chat" class="mobile-nav-link" data-nav="chat">
+    <i class="bi bi-chat-dots"></i><span>Chat</span>
+    <% if (unreadMessages) { %>
+    <span class="mobile-nav-badge"><%= unreadMessages %></span>
+    <% } %>
+  </a>
+  <a href="/jobs" class="mobile-nav-link" data-nav="jobs">
+    <i class="bi bi-briefcase"></i><span>Jobs</span>
+  </a>
+  <a href="/profile/<%= currentUser.id %>" class="mobile-nav-link" data-nav="profile">
+    <i class="bi bi-person-circle"></i><span>Profile</span>
+  </a>
+</nav>
+<% } %>
+
+<!-- ============ BACK TO TOP (appears after scrolling) ============ -->
+<button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">
+  <i class="bi bi-arrow-up"></i>
+</button>
+
+<!-- ============ INSTALL APP BANNER (PWA, mobile only) ============
+     Hidden by default; /js/main.js shows it on phones when the app
+     can be installed and it was not dismissed in the last 7 days. -->
+<div id="installBanner" class="install-banner<%= currentUser ? ' above-nav' : '' %>" hidden>
+  <img src="/images/icon-192.png" alt="" class="install-icon">
+  <div class="install-text">
+    <strong>Install Alumni Hub</strong>
+    <small>Add it to your home screen — it opens like an app, full screen.</small>
+    <div class="install-steps" id="installSteps" hidden>
+      In your browser menu choose <strong>Install app</strong> / <strong>Add to
+      Home screen</strong>. On iPhone (Safari): tap
+      <i class="bi bi-box-arrow-up"></i> <strong>Share</strong>, then
+      <strong>Add to Home Screen</strong>.
+    </div>
+  </div>
+  <button id="installBtn" class="btn btn-primary btn-sm flex-shrink-0" type="button">Install</button>
+  <button id="installClose" class="btn-close install-close" type="button" aria-label="Dismiss"></button>
+</div>
 
 <!-- Bootstrap 5 JS bundle (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

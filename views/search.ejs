@@ -17,18 +17,31 @@
   </div>
 </div>
 
-<!-- Role filter buttons -->
-<div class="btn-group mb-4" role="group" aria-label="Filter by role">
-  <a href="/search" class="btn btn-<%= !role ? 'primary' : 'outline-primary' %>">All</a>
-  <a href="/search?role=student" class="btn btn-<%= role === 'student' ? 'primary' : 'outline-primary' %>">Students</a>
-  <a href="/search?role=alumni" class="btn btn-<%= role === 'alumni' ? 'primary' : 'outline-primary' %>">Alumni</a>
-  <a href="/search?role=faculty" class="btn btn-<%= role === 'faculty' ? 'primary' : 'outline-primary' %>">Faculty</a>
+<!-- Role filter buttons + sort order (sort runs in the browser,
+     see /js/main.js; the cards carry data-name / data-joined) -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div class="btn-group" role="group" aria-label="Filter by role">
+    <a href="/search" class="btn btn-<%= !role ? 'primary' : 'outline-primary' %>">All</a>
+    <a href="/search?role=student" class="btn btn-<%= role === 'student' ? 'primary' : 'outline-primary' %>">Students</a>
+    <a href="/search?role=alumni" class="btn btn-<%= role === 'alumni' ? 'primary' : 'outline-primary' %>">Alumni</a>
+    <a href="/search?role=faculty" class="btn btn-<%= role === 'faculty' ? 'primary' : 'outline-primary' %>">Faculty</a>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <label for="memberSort" class="form-label mb-0 small text-muted">
+      <i class="bi bi-sort-down"></i> Sort by
+    </label>
+    <select id="memberSort" class="form-select form-select-sm" style="width: auto;">
+      <option value="name" selected>Name (A–Z)</option>
+      <option value="newest">Newest first</option>
+    </select>
+  </div>
 </div>
 
 <% if (members.length) { %>
 <div class="row g-3" id="cardGrid">
   <% members.forEach(function(m) { %>
-  <div class="col-md-6 col-lg-4 filter-item">
+  <div class="col-md-6 col-lg-4 filter-item reveal"
+       data-name="<%= m.name.toLowerCase() %>" data-joined="<%= m.created_at || '' %>">
     <div class="card h-100 shadow-sm member-card">
       <div class="card-body">
         <div class="d-flex align-items-center gap-3 mb-2">

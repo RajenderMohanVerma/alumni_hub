@@ -18,15 +18,18 @@ connections, one-to-one chat, a job board, announcements and an admin panel, all
 |---|---|
 | **Public website** | Home page with live counters and latest jobs, About, Services and a Contact page (messages are saved for the admin) — no login needed |
 | **Users & Roles** | Register / login as **Student**, **Alumni** or **Faculty**; a separate **Admin** manages the platform |
-| **Profiles** | Photo upload, role-specific details (course / company / department), skills and bio |
-| **Member Directory** | Search all members with instant live filtering, filter by role, view full profiles |
+| **Profiles** | Photo upload, role-specific details (course / company / department), skills and bio, plus a **profile-completeness meter** on the dashboard |
+| **Recommendations** | KNN-based **"Suggested for You"** people on every dashboard (match % + reasons) and **recommended jobs** for students — see [docs/RECOMMENDER.md](docs/RECOMMENDER.md) |
+| **Member Directory** | Search all members with instant live filtering, filter by role, sort by name or newest, view full profiles |
 | **Connections** | Send, accept or reject connection requests, with notifications |
 | **Chat** | Simple one-to-one messaging with unread badges in the navbar |
-| **Job Board** | Alumni post jobs; students apply in one click and track status (Applied / Shortlisted / Rejected); alumni manage applicants |
+| **Job Board** | Alumni post jobs; students apply in one click and track status (Applied / Shortlisted / Rejected); alumni manage applicants; location filter chips on the job list |
 | **Announcements** | Faculty publish notices for the whole institute |
 | **Notifications** | Connection requests, new jobs and application updates in one feed |
 | **Admin Panel** | Dashboard with charts, block/delete users, delete jobs, read contact-form messages |
-| **Design** | Common navbar + rich footer on every page, animated counters, scroll-reveal cards, fully responsive (Bootstrap 5) |
+| **Help** | A public **FAQ page** (`/faq`) answering account, connection, job and privacy questions |
+| **Mobile App Feel** | Installable **PWA** — "Install Alumni Hub" prompt on phones, home-screen icon, service-worker caching — plus an app-style **bottom navigation bar** when logged in on mobile |
+| **Design** | Common navbar + rich footer on every page, animated counters, scroll-reveal cards, hover-lift cards, back-to-top button, fully responsive (Bootstrap 5) |
 
 ## Technology
 
@@ -88,11 +91,12 @@ alumni-hub-minor/
 ├── package.json          # JS dependencies (express, ejs, better-sqlite3, ...)
 ├── app.js                # Express server — ALL main routes (port 3000)
 ├── models.js             # Database layer: connection, 11 tables, helpers
+├── recommend.js          # KNN recommendations ("Suggested for You" + jobs)
 ├── config.js             # Settings: ports, DB path, AUTH_SECRET, auth URL
 ├── seed.js               # Demo data (JavaScript)
 ├── seed.py               # Demo data (Python — canonical copy, kept as-is)
 ├── views/                # EJS templates (partials/header + footer = the base layout)
-├── public/               # CSS, JS, images (served directly by Express)
+├── public/               # CSS, JS, images + PWA files (manifest.json, sw.js)
 ├── uploads/              # Profile pictures uploaded by users
 ├── auth_service/
 │   ├── auth.py           # Flask app — ONLY login / register / change-password (port 5001)

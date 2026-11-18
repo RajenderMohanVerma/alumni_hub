@@ -14,7 +14,7 @@
 </div>
 
 <!-- Live search: type to filter the job cards instantly (see /js/main.js) -->
-<div class="card shadow-sm mb-4">
+<div class="card shadow-sm mb-3">
   <div class="card-body">
     <div class="input-group">
       <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -25,11 +25,25 @@
   </div>
 </div>
 
+<% /* Location filter chips: one chip per location present in the list.
+      Clicking a chip filters the cards together with the search box
+      (the logic lives in /js/main.js). */ %>
+<% const locations = [...new Set(jobs.map(function(j) { return j.location; }).filter(Boolean))].sort(); %>
+<% if (locations.length) { %>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4" id="jobChips">
+  <span class="text-muted small"><i class="bi bi-geo-alt"></i> Location:</span>
+  <button type="button" class="filter-chip active" data-location="">All locations</button>
+  <% locations.forEach(function(loc) { %>
+  <button type="button" class="filter-chip" data-location="<%= loc %>"><%= loc %></button>
+  <% }) %>
+</div>
+<% } %>
+
 <% if (jobs.length) { %>
 <div class="row g-3" id="cardGrid">
   <% jobs.forEach(function(job) { %>
-  <div class="col-md-6 col-lg-4 filter-item">
-    <div class="card h-100 shadow-sm">
+  <div class="col-md-6 col-lg-4 filter-item reveal" data-location="<%= job.location || '' %>">
+    <div class="card h-100 shadow-sm job-card">
       <div class="card-body">
         <h5 class="card-title fw-semibold"><%= job.title %></h5>
         <p class="card-subtitle text-muted mb-2">

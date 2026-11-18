@@ -54,7 +54,7 @@
 
 <!-- ================= FEATURES ================= -->
 <section class="mb-5">
-  <h2 class="fw-bold text-center mb-1">What can you do here?</h2>
+  <h2 class="fw-bold text-center mb-1 section-title-center">What can you do here?</h2>
   <p class="text-center text-muted mb-4">Simple features, made for everyday campus use.</p>
   <div class="row g-3">
     <div class="col-md-4 reveal">
@@ -104,14 +104,14 @@
 <!-- ================= LATEST JOBS ================= -->
 <section>
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="fw-bold mb-0">Latest Jobs</h2>
+    <h2 class="fw-bold mb-0 section-title">Latest Jobs</h2>
     <a href="/jobs" class="btn btn-outline-primary btn-sm">View all jobs</a>
   </div>
   <% if (latestJobs.length) { %>
     <div class="row g-3">
       <% latestJobs.forEach(function(job) { %>
       <div class="col-md-4 reveal">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 shadow-sm job-card">
           <div class="card-body">
             <h5 class="card-title fw-semibold"><%= job.title %></h5>
             <p class="card-subtitle text-muted mb-2">
