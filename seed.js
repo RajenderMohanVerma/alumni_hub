@@ -345,33 +345,61 @@ function seedDemoData() {
  * a job a real alumnus posted) is never given demo rows.
  */
 function seedMissingSections() {
-  models.initDb();
+  // The Express app has already run models.initDb() before calling
+  // this, so it is deliberately NOT repeated here (it used to run
+  // twice on every boot).
   const db = models.openDb();
   const filled = [];
 
+  // ONE combined query counts every demo section's table. This used
+  // to be seven separate COUNT queries plus - on most boots - nine
+  // demo-user id lookups: ~16 statements, each a network round trip
+  // against the shared cloud database, on EVERY cold boot.
+  const counts = db
+    .prepare(
+      `SELECT (SELECT COUNT(*) FROM users) AS users,
+              (SELECT COUNT(*) FROM jobs) AS jobs,
+              (SELECT COUNT(*) FROM connections) AS connections,
+              (SELECT COUNT(*) FROM messages) AS messages,
+              (SELECT COUNT(*) FROM applications) AS applications,
+              (SELECT COUNT(*) FROM announcements) AS announcements,
+              (SELECT COUNT(*) FROM notifications) AS notifications`
+    )
+    .get();
+
   let ids;
-  if (tableCount(db, "users") === 0) {
+  if (counts.users === 0) {
     ids = seedUsersAndProfiles(db);
     filled.push("users");
-  } else {
+  } else if (
+    counts.jobs === 0 ||
+    counts.connections === 0 ||
+    counts.messages === 0 ||
+    counts.applications === 0 ||
+    counts.announcements === 0 ||
+    counts.notifications === 0
+  ) {
+    // Demo user ids are resolved ONLY when some section actually
+    // needs them - on a fully populated database they are never
+    // looked up at all.
     ids = demoUserIds(db);
   }
-  if (tableCount(db, "jobs") === 0 && seedJobs(db, ids)) {
+  if (counts.jobs === 0 && seedJobs(db, ids)) {
     filled.push("jobs");
   }
-  if (tableCount(db, "connections") === 0 && seedConnections(db, ids)) {
+  if (counts.connections === 0 && seedConnections(db, ids)) {
     filled.push("connections");
   }
-  if (tableCount(db, "messages") === 0 && seedMessages(db, ids)) {
+  if (counts.messages === 0 && seedMessages(db, ids)) {
     filled.push("messages");
   }
-  if (tableCount(db, "applications") === 0 && seedApplications(db, ids)) {
+  if (counts.applications === 0 && seedApplications(db, ids)) {
     filled.push("applications");
   }
-  if (tableCount(db, "announcements") === 0 && seedAnnouncement(db, ids)) {
+  if (counts.announcements === 0 && seedAnnouncement(db, ids)) {
     filled.push("announcements");
   }
-  if (tableCount(db, "notifications") === 0 && seedWelcomeNotification(db, ids)) {
+  if (counts.notifications === 0 && seedWelcomeNotification(db, ids)) {
     filled.push("notifications");
   }
 

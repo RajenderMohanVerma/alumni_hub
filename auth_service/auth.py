@@ -203,6 +203,9 @@ CREATE TABLE IF NOT EXISTS users (
     role          TEXT NOT NULL CHECK (role IN ('student', 'alumni', 'faculty', 'admin')),
     phone         TEXT,
     profile_pic   TEXT,
+    photo_data    TEXT,
+    photo_mime    TEXT,
+    photo_updated_at INTEGER,
     is_active     INTEGER NOT NULL DEFAULT 1,
     created_at    TEXT DEFAULT (datetime('now', 'localtime'))
 );
@@ -279,11 +282,30 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 """
 
 
+# Columns added to the users table after the first release (profile
+# photos now live in the database itself - see models.js). Added here
+# too, with the same idempotent check, because this service may boot
+# before the Express app against a fresh shared database.
+USER_PHOTO_COLUMNS = [
+    ("photo_data", "TEXT"),
+    ("photo_mime", "TEXT"),
+    ("photo_updated_at", "INTEGER"),
+]
+
+
 def init_db():
     conn = _connect()
     try:
         conn.execute("PRAGMA foreign_keys = ON")
         conn.executescript(SCHEMA)
+        existing = {
+            row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()
+        }
+        for name, col_type in USER_PHOTO_COLUMNS:
+            if name not in existing:
+                conn.execute(
+                    f"ALTER TABLE users ADD COLUMN {name} {col_type}"
+                )
         conn.commit()
     finally:
         conn.close()

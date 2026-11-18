@@ -103,6 +103,9 @@ CREATE TABLE IF NOT EXISTS users (
     role          TEXT NOT NULL CHECK (role IN ('student', 'alumni', 'faculty', 'admin')),
     phone         TEXT,
     profile_pic   TEXT,
+    photo_data    TEXT,
+    photo_mime    TEXT,
+    photo_updated_at INTEGER,
     is_active     INTEGER NOT NULL DEFAULT 1,
     created_at    TEXT DEFAULT (datetime('now', 'localtime'))
 );
@@ -203,9 +206,41 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 );
 `;
 
-/** Create all tables if they do not exist yet. */
+/**
+ * Columns added to the users table after the first release. Profile
+ * pictures used to be saved as files in an uploads folder; on Vercel
+ * that folder is temporary and different on every server instance, so
+ * a photo kept vanishing (the default icon showed instead). Photos are
+ * now stored IN the database itself (base64 text + its mime type), so
+ * they are available everywhere the database is. photo_updated_at
+ * (unix seconds) doubles as the cache-busting version in photo URLs.
+ */
+const USER_PHOTO_COLUMNS = [
+  ["photo_data", "TEXT"],
+  ["photo_mime", "TEXT"],
+  ["photo_updated_at", "INTEGER"],
+];
+
+/**
+ * Create all tables if they do not exist yet, and add any newer users
+ * columns to databases created before they existed. Idempotent: the
+ * column list is checked first, so running this on every boot (in both
+ * services) is safe and changes nothing once the columns are there.
+ */
 function initDb() {
-  openDb().exec(SCHEMA);
+  const db = openDb();
+  db.exec(SCHEMA);
+  const existing = new Set(
+    db
+      .prepare("PRAGMA table_info(users)")
+      .all()
+      .map((col) => col.name)
+  );
+  for (const [name, type] of USER_PHOTO_COLUMNS) {
+    if (!existing.has(name)) {
+      db.exec(`ALTER TABLE users ADD COLUMN ${name} ${type}`);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

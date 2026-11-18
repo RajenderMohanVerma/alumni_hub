@@ -81,16 +81,15 @@ if (config.ON_VERCEL || config.TURSO_DATABASE_URL) {
   }
 }
 
-// Profile-picture upload settings (multer): the file is saved as
-// "user_<id>.<ext>" inside the uploads folder, max 2 MB.
+// Profile-picture upload settings (multer): the file is kept in
+// memory (max 2 MB) and then stored IN THE DATABASE by the
+// profile-edit route (see section 7). It is deliberately NOT saved
+// to a folder any more: on Vercel the uploads folder lives in a
+// temporary /tmp that is different on every server instance, so a
+// photo saved there kept disappearing (the default icon showed in
+// its place). The database is the one storage both services share.
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, config.UPLOAD_DIR),
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `user_${req.user.id}${ext}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: config.MAX_UPLOAD_SIZE },
 });
 
@@ -177,9 +176,36 @@ app.use((req, res, next) => {
 // ===========================================================================
 // 4. Template helpers + the "who is logged in?" middleware
 // ===========================================================================
-// URL of the picture to show for a user (uploaded photo or default).
+/**
+ * URL of the picture to show for a user - THE one helper every
+ * template uses for every avatar on the site, so a member's photo
+ * looks the same in the navbar, profiles, member lists, chat,
+ * suggestions and the admin panel.
+ *
+ * Photos uploaded now live in the database (users.photo_data) and are
+ * served by GET /user-photo/<id>; the "?v=" part is the upload time,
+ * so the URL changes - and browsers fetch the new picture - whenever
+ * the photo is replaced. Queries that render avatars select the light
+ * flag "(photo_data IS NOT NULL) AS has_photo" + photo_updated_at
+ * instead of hauling the base64 text through every page; rows loaded
+ * with the photo itself (photo_data present) work too.
+ *
+ * Older photos saved as files before this change (profile_pic set,
+ * no photo_data) are still served from the uploads folder, exactly
+ * as before. Everyone else gets the default avatar.
+ */
 function avatarUrl(user) {
-  if (user && user.profile_pic) return "/uploads/" + user.profile_pic;
+  if (user && user.id != null) {
+    const hasPhoto =
+      user.has_photo != null ? !!user.has_photo : !!user.photo_data;
+    if (hasPhoto) {
+      const version = user.photo_updated_at
+        ? `?v=${user.photo_updated_at}`
+        : "";
+      return `/user-photo/${user.id}${version}`;
+    }
+    if (user.profile_pic) return "/uploads/" + user.profile_pic;
+  }
   return "/images/default-avatar.svg";
 }
 
@@ -209,6 +235,18 @@ function dateformat(value) {
   const d = new Date(String(value).slice(0, 10) + "T00:00:00");
   if (isNaN(d)) return value;
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// "2026-11-18 10:15:00" -> "10:15 AM" (chat bubble timestamps)
+function timeformat(value) {
+  if (!value) return "";
+  const d = new Date(String(value).replace(" ", "T"));
+  if (isNaN(d)) return value;
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
 }
 
 // Shorten a long text the same way Jinja's truncate filter does.
@@ -263,22 +301,41 @@ app.use((req, res, next) => {
   // helpers available inside every EJS template:
   res.locals.avatarUrl = avatarUrl;
   res.locals.datetimeformat = datetimeformat;
+  res.locals.timeformat = timeformat;
   res.locals.dateformat = dateformat;
   res.locals.truncate = truncate;
   res.locals.capitalize = capitalize;
 
   const payload = verifyToken(req.cookies.ah_token);
   if (payload) {
+    // ONE statement loads the user AND both navbar badge counts (as
+    // scalar subqueries). This middleware runs on every request, and
+    // against the shared cloud database every extra statement is a
+    // full network round trip - it used to run three. Every column
+    // EXCEPT photo_data (the base64 photo itself can be megabytes -
+    // pages only need the has_photo flag + version; the picture bytes
+    // are served by GET /user-photo/<id>).
     const user = models
       .openDb()
-      .prepare("SELECT * FROM users WHERE id = ?")
+      .prepare(
+        `SELECT id, name, email, password_hash, role, phone, profile_pic,
+                is_active, created_at,
+                (photo_data IS NOT NULL) AS has_photo, photo_updated_at,
+                (SELECT COUNT(*) FROM notifications
+                  WHERE user_id = users.id AND is_read = 0)
+                  AS unread_notifications,
+                (SELECT COUNT(*) FROM messages
+                  WHERE receiver_id = users.id AND is_read = 0)
+                  AS unread_messages
+           FROM users WHERE id = ?`
+      )
       .get(payload.uid);
     // The user must still exist and must not be blocked by the admin
     if (user && user.is_active) {
       req.user = user;
       res.locals.currentUser = user;
-      res.locals.unreadNotifications = models.unreadNotificationCount(user.id);
-      res.locals.unreadMessages = models.unreadMessageCount(user.id);
+      res.locals.unreadNotifications = user.unread_notifications;
+      res.locals.unreadMessages = user.unread_messages;
     }
   }
   next();
@@ -350,7 +407,26 @@ app.get("/", (req, res) => {
         ORDER BY jobs.id DESC LIMIT 3`
     )
     .all();
-  res.render("home", { stats, latestJobs });
+  // A few alumni / faculty to feature on the home page (photo first).
+  // The template hides the whole strip when this list is empty.
+  const featuredPeople = db
+    .prepare(
+      `SELECT users.id, users.name, users.role, users.profile_pic,
+              (users.photo_data IS NOT NULL) AS has_photo,
+              users.photo_updated_at,
+              alumni_profile.company AS company,
+              alumni_profile.designation AS alumni_designation,
+              faculty_profile.department AS department,
+              faculty_profile.designation AS faculty_designation
+         FROM users
+         LEFT JOIN alumni_profile ON alumni_profile.user_id = users.id
+         LEFT JOIN faculty_profile ON faculty_profile.user_id = users.id
+        WHERE users.role IN ('alumni', 'faculty') AND users.is_active = 1
+        ORDER BY (users.profile_pic IS NOT NULL) DESC, users.id ASC
+        LIMIT 4`
+    )
+    .all();
+  res.render("home", { stats, latestJobs, featuredPeople });
 });
 
 // About page - project information (static content)
@@ -394,6 +470,32 @@ app.get("/uploads/:filename", requireAuth, (req, res) => {
   });
 });
 
+// Profile pictures stored in the database (the current way - see the
+// avatarUrl helper). Login required, same as the uploads route above:
+// avatars are only ever shown to signed-in members. A user without a
+// stored photo is bounced to the default avatar, so an <img> using
+// this URL can never end up broken. The ETag carries the upload time,
+// so a replaced photo is re-fetched instead of served from cache.
+app.get("/user-photo/:id", requireAuth, (req, res) => {
+  const row = models
+    .openDb()
+    .prepare(
+      "SELECT photo_data, photo_mime, photo_updated_at FROM users WHERE id = ?"
+    )
+    .get(parseInt(req.params.id, 10));
+  if (!row || !row.photo_data) {
+    return res.redirect("/images/default-avatar.svg");
+  }
+  const etag = `"user-photo-${req.params.id}-${row.photo_updated_at || 0}"`;
+  if (req.headers["if-none-match"] === etag) return res.status(304).end();
+  res.set({
+    "Content-Type": row.photo_mime || "application/octet-stream",
+    "Cache-Control": "private, max-age=86400",
+    ETag: etag,
+  });
+  res.send(Buffer.from(row.photo_data, "base64"));
+});
+
 // ===========================================================================
 // 6. Auth routes - the handoff with the Python auth service
 // ===========================================================================
@@ -419,7 +521,7 @@ app.get("/auth/callback", (req, res) => {
   }
   const user = models
     .openDb()
-    .prepare("SELECT * FROM users WHERE id = ?")
+    .prepare("SELECT id, name, is_active FROM users WHERE id = ?")
     .get(payload.uid);
   if (!user || !user.is_active) {
     return res.redirect(
@@ -501,7 +603,9 @@ app.get("/dashboard", requireAuth, (req, res) => {
   if (user.role === "admin") return res.redirect("/admin");
 
   const profile = models.getProfile(user.id, user.role);
-  const suggestions = recommend.recommendPeople(db, user, 6);
+  // The already-loaded profile is passed in so the recommender does
+  // not fetch it a second time (see recommend.js).
+  const suggestions = recommend.recommendPeople(db, user, 6, profile);
   const profileComplete = profileCompleteness(user, profile);
   const count = (sql, ...params) => db.prepare(sql).get(...params).c;
   let stats;
@@ -520,7 +624,7 @@ app.get("/dashboard", requireAuth, (req, res) => {
       ),
       announcements: count("SELECT COUNT(*) AS c FROM announcements"),
     };
-    const jobSuggestions = recommend.recommendJobs(db, user, 3);
+    const jobSuggestions = recommend.recommendJobs(db, user, 3, profile);
     return res.render("dashboard_student", {
       profile, stats, suggestions, jobSuggestions, profileComplete,
     });
@@ -576,36 +680,64 @@ app.post("/profile/edit", requireAuth, (req, res, next) => {
 }, (req, res) => {
   const db = models.openDb();
   const user = req.user;
+  const name = (req.body.name || "").trim();
+  const phone = emptyToNull(req.body.phone);
+  const saveNamePhone = () =>
+    db
+      .prepare("UPDATE users SET name = ?, phone = ? WHERE id = ?")
+      .run(name, phone, user.id);
 
-  // 1) Basic details (name + phone live in the users table)
-  db.prepare("UPDATE users SET name = ?, phone = ? WHERE id = ?").run(
-    (req.body.name || "").trim(),
-    emptyToNull(req.body.phone),
-    user.id
-  );
-
-  // 2) Profile picture (only png / jpg files are accepted)
+  // Profile picture (only png / jpg files are accepted). The image
+  // itself is stored IN THE DATABASE (base64), so it survives on
+  // every server instance - see the avatarUrl helper. profile_pic
+  // keeps its old meaning ("this user has a photo", used by the
+  // completeness meter and the home page ordering) and is set to the
+  // same marker name the old disk upload would have used.
+  //
+  // A valid photo rides along in the SAME users UPDATE as name +
+  // phone below (one write instead of two - against the shared cloud
+  // database every write is a network round trip). A rejected photo
+  // keeps the old behaviour exactly: name + phone are still saved,
+  // the role fields (step 2) are skipped, and the user lands back on
+  // the form with a warning.
+  let photo = null;
   if (req.file) {
-    const ext = path.extname(req.file.filename).toLowerCase();
-    if (config.ALLOWED_EXTENSIONS.includes(ext)) {
-      db.prepare("UPDATE users SET profile_pic = ? WHERE id = ?").run(
-        req.file.filename, user.id
-      );
-    } else {
-      fs.unlink(req.file.path, () => {});
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (!config.ALLOWED_EXTENSIONS.includes(ext)) {
+      saveNamePhone();
       flashRedirect(
         res, "warning", "Only PNG or JPG images are allowed as profile picture."
       );
       return res.redirect("/profile/edit");
     }
+    photo = {
+      marker: `user_${user.id}${ext}`,
+      data: req.file.buffer.toString("base64"),
+      mime: ext === ".png" ? "image/png" : "image/jpeg",
+      ts: Math.floor(Date.now() / 1000),
+    };
   } else if (req.uploadError) {
+    saveNamePhone();
     flashRedirect(
       res, "warning", "Only PNG or JPG images up to 2 MB are allowed."
     );
     return res.redirect("/profile/edit");
   }
 
-  // 3) Role-specific details live in the role's own profile table
+  // 1) Basic details (name + phone live in the users table), with the
+  //    photo columns folded into the same statement when there is one
+  if (photo) {
+    db.prepare(
+      `UPDATE users
+          SET name = ?, phone = ?, profile_pic = ?, photo_data = ?,
+              photo_mime = ?, photo_updated_at = ?
+        WHERE id = ?`
+    ).run(name, phone, photo.marker, photo.data, photo.mime, photo.ts, user.id);
+  } else {
+    saveNamePhone();
+  }
+
+  // 2) Role-specific details live in the role's own profile table
   const table = models.PROFILE_TABLES[user.role];
   if (table) {
     const fieldsByRole = {
@@ -632,12 +764,27 @@ app.post("/profile/edit", requireAuth, (req, res, next) => {
 // otherwise "edit" would be mistaken for a user id)
 app.get("/profile/:userId", requireAuth, (req, res) => {
   const db = models.openDb();
-  const person = db
-    .prepare("SELECT * FROM users WHERE id = ?")
-    .get(req.params.userId);
+  // Own profile: the auth middleware already loaded this exact user
+  // row, so reuse it instead of asking the database again - and skip
+  // the connection-status lookup, which the template only reads when
+  // viewing SOMEONE ELSE's profile (your own page shows the Edit
+  // Profile button instead; verified in views/profile.ejs).
+  const isOwn = parseInt(req.params.userId, 10) === req.user.id;
+  const person = isOwn
+    ? req.user
+    : db
+        .prepare(
+          `SELECT id, name, email, password_hash, role, phone, profile_pic,
+                  is_active, created_at,
+                  (photo_data IS NOT NULL) AS has_photo, photo_updated_at
+             FROM users WHERE id = ?`
+        )
+        .get(req.params.userId);
   if (!person) return res.status(404).render("errors/404");
   const profile = models.getProfile(person.id, person.role);
-  const status = connectionStatus(db, req.user.id, person.id);
+  const status = isOwn
+    ? "none"
+    : connectionStatus(db, req.user.id, person.id);
   res.render("profile", { person, profile, connectionStatus: status });
 });
 
@@ -650,7 +797,10 @@ app.get("/search", requireAuth, (req, res) => {
   const db = models.openDb();
   const role = req.query.role || "";
   let sql =
-    `SELECT users.*,
+    `SELECT users.id, users.name, users.email, users.role, users.phone,
+            users.profile_pic, users.is_active, users.created_at,
+            (users.photo_data IS NOT NULL) AS has_photo,
+            users.photo_updated_at,
             COALESCE(sp.skills, ap.skills, fp.skills) AS skills,
             COALESCE(sp.bio, ap.bio, fp.bio) AS bio
        FROM users
@@ -679,7 +829,9 @@ app.post("/connect/:userId", requireAuth, (req, res) => {
   const db = models.openDb();
   const otherId = parseInt(req.params.userId, 10);
   if (otherId === req.user.id) return res.redirect("/search");
-  const other = db.prepare("SELECT * FROM users WHERE id = ?").get(otherId);
+  const other = db
+    .prepare("SELECT id, name, email, role, is_active FROM users WHERE id = ?")
+    .get(otherId);
   if (!other) return res.status(404).render("errors/404");
   try {
     db.prepare(
@@ -705,7 +857,9 @@ app.get("/connections", requireAuth, (req, res) => {
   const pending = db
     .prepare(
       `SELECT connections.*, users.name, users.email, users.role,
-              users.profile_pic
+              users.profile_pic,
+              (users.photo_data IS NOT NULL) AS has_photo,
+              users.photo_updated_at
          FROM connections JOIN users ON users.id = connections.sender_id
         WHERE connections.receiver_id = ? AND connections.status = 'pending'
         ORDER BY connections.id DESC`
@@ -718,6 +872,8 @@ app.get("/connections", requireAuth, (req, res) => {
               CASE WHEN connections.sender_id = ? THEN r.email ELSE s.email END AS email,
               CASE WHEN connections.sender_id = ? THEN r.role ELSE s.role END AS role,
               CASE WHEN connections.sender_id = ? THEN r.profile_pic ELSE s.profile_pic END AS profile_pic,
+              CASE WHEN connections.sender_id = ? THEN r.photo_data ELSE s.photo_data END IS NOT NULL AS has_photo,
+              CASE WHEN connections.sender_id = ? THEN r.photo_updated_at ELSE s.photo_updated_at END AS photo_updated_at,
               CASE WHEN connections.sender_id = ? THEN connections.receiver_id ELSE connections.sender_id END AS other_id
          FROM connections
          JOIN users s ON s.id = connections.sender_id
@@ -726,7 +882,7 @@ app.get("/connections", requireAuth, (req, res) => {
           AND (connections.sender_id = ? OR connections.receiver_id = ?)
         ORDER BY connections.id DESC`
     )
-    .all(me, me, me, me, me, me, me);
+    .all(me, me, me, me, me, me, me, me, me);
   res.render("connections", { pending, accepted });
 });
 
@@ -765,6 +921,7 @@ app.get("/chat", requireAuth, (req, res) => {
   const chats = db
     .prepare(
       `SELECT u.id, u.name, u.email, u.role, u.profile_pic,
+              (u.photo_data IS NOT NULL) AS has_photo, u.photo_updated_at,
               (SELECT body FROM messages
                 WHERE (sender_id = u.id AND receiver_id = ?)
                    OR (sender_id = ? AND receiver_id = u.id)
@@ -792,7 +949,12 @@ app.get("/chat", requireAuth, (req, res) => {
 app.get("/chat/:userId", requireAuth, (req, res) => {
   const db = models.openDb();
   const other = db
-    .prepare("SELECT * FROM users WHERE id = ?")
+    .prepare(
+      `SELECT id, name, email, role, phone, profile_pic, is_active,
+              created_at, (photo_data IS NOT NULL) AS has_photo,
+              photo_updated_at
+         FROM users WHERE id = ?`
+    )
     .get(req.params.userId);
   if (!other || other.id === req.user.id) {
     return res.redirect("/chat");
@@ -808,13 +970,32 @@ app.get("/chat/:userId", requireAuth, (req, res) => {
   db.prepare(
     "UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?"
   ).run(other.id, req.user.id);
-  res.render("conversation", { other, messages });
+  // The chat header's sub-line: a real detail from the partner's
+  // profile (course/branch for a student, designation + company for
+  // an alumnus, designation + department for faculty), falling back
+  // to their email when the profile has none of those filled.
+  const otherProfile = models.getProfile(other.id, other.role);
+  let chatSubline = other.email;
+  if (otherProfile) {
+    const parts =
+      other.role === "student"
+        ? [otherProfile.course, otherProfile.branch]
+        : [
+            otherProfile.designation,
+            other.role === "alumni"
+              ? otherProfile.company
+              : otherProfile.department,
+          ];
+    const detail = parts.filter(Boolean).join(" · ");
+    if (detail) chatSubline = detail;
+  }
+  res.render("conversation", { other, messages, chatSubline });
 });
 
 app.post("/chat/:userId", requireAuth, (req, res) => {
   const db = models.openDb();
   const other = db
-    .prepare("SELECT * FROM users WHERE id = ?")
+    .prepare("SELECT id FROM users WHERE id = ?")
     .get(req.params.userId);
   if (!other || other.id === req.user.id) {
     return res.redirect("/chat");
@@ -999,7 +1180,9 @@ app.get("/jobs/:jobId/applicants", requireAuth, requireRole("alumni"), (req, res
   }
   const applicants = db
     .prepare(
-      `SELECT applications.*, users.name, users.email, users.profile_pic
+      `SELECT applications.*, users.name, users.email, users.profile_pic,
+              (users.photo_data IS NOT NULL) AS has_photo,
+              users.photo_updated_at
          FROM applications JOIN users ON users.id = applications.student_id
         WHERE applications.job_id = ? ORDER BY applications.id DESC`
     )
@@ -1127,19 +1310,24 @@ app.get("/admin", requireAuth, requireRole("admin"), (req, res) => {
 app.get("/admin/users", requireAuth, requireRole("admin"), (req, res) => {
   const q = (req.query.q || "").trim();
   let users;
+  // All user columns except the (potentially megabyte-sized) photo
+  // bytes - the table only needs the has_photo flag + version.
+  const userCols = `id, name, email, role, phone, profile_pic, is_active,
+                    created_at, (photo_data IS NOT NULL) AS has_photo,
+                    photo_updated_at`;
   if (q) {
     const like = "%" + q + "%";
     users = models
       .openDb()
       .prepare(
-        `SELECT * FROM users
+        `SELECT ${userCols} FROM users
           WHERE name LIKE ? OR email LIKE ? ORDER BY role, name`
       )
       .all(like, like);
   } else {
     users = models
       .openDb()
-      .prepare("SELECT * FROM users ORDER BY role, name")
+      .prepare(`SELECT ${userCols} FROM users ORDER BY role, name`)
       .all();
   }
   res.render("admin/users", { users, q });
@@ -1149,7 +1337,7 @@ app.get("/admin/users", requireAuth, requireRole("admin"), (req, res) => {
 app.post("/admin/users/:userId/toggle", requireAuth, requireRole("admin"), (req, res) => {
   const db = models.openDb();
   const target = db
-    .prepare("SELECT * FROM users WHERE id = ?")
+    .prepare("SELECT id, name, is_active FROM users WHERE id = ?")
     .get(req.params.userId);
   if (target && target.id !== req.user.id) {
     db.prepare("UPDATE users SET is_active = ? WHERE id = ?").run(
@@ -1169,7 +1357,7 @@ app.post("/admin/users/:userId/toggle", requireAuth, requireRole("admin"), (req,
 app.post("/admin/users/:userId/delete", requireAuth, requireRole("admin"), (req, res) => {
   const db = models.openDb();
   const target = db
-    .prepare("SELECT * FROM users WHERE id = ?")
+    .prepare("SELECT id, name FROM users WHERE id = ?")
     .get(req.params.userId);
   if (target && target.id !== req.user.id) {
     db.prepare("DELETE FROM users WHERE id = ?").run(target.id);

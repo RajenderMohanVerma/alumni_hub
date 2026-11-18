@@ -22,6 +22,11 @@
  * The two public functions:
  *   recommendPeople(db, currentUser, k = 6)  -> people suggestions
  *   recommendJobs(db, currentUser, k = 3)    -> job suggestions
+ * Both also accept the caller's already-loaded profile row as an
+ * optional last argument, so it is never fetched twice. Candidate
+ * profiles are bulk-loaded (one query per profile table) and scored
+ * in memory - the scores are identical to the old one-query-per-
+ * person version, just with far fewer database round trips.
  * Both return objects with a ready-to-show matchPercent (0-100) and a
  * list of human-readable `reasons`.
  */
@@ -174,6 +179,40 @@ function featuresFor(db, user) {
   return extractFeatures(user, models.getProfile(user.id, user.role));
 }
 
+/**
+ * Load EVERY profile row of all three role tables in three queries
+ * total (one per table), as per-role Maps keyed by user_id. Scoring a
+ * whole member list from these maps gives exactly the same features
+ * as one getProfile() call per person - but against the shared cloud
+ * database each of those calls is a network round trip, so the
+ * per-person version made the dashboard slower with every new member.
+ */
+function bulkProfiles(db) {
+  const byRole = {};
+  for (const [role, table] of Object.entries(models.PROFILE_TABLES)) {
+    const map = new Map();
+    for (const row of db.prepare(`SELECT * FROM ${table}`).all()) {
+      map.set(row.user_id, row);
+    }
+    byRole[role] = map;
+  }
+  return byRole;
+}
+
+/**
+ * Features of the logged-in user. The dashboard route has usually
+ * loaded this profile already and passes it in, so it is not fetched
+ * a second time here; when no profile is passed, load it as before.
+ */
+function myFeatures(currentUser, currentProfile) {
+  return extractFeatures(
+    currentUser,
+    currentProfile !== undefined
+      ? currentProfile
+      : models.getProfile(currentUser.id, currentUser.role)
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Similarity between two people (0..1) + the reasons behind the score
 // ---------------------------------------------------------------------------
@@ -276,8 +315,8 @@ function titleCase(word) {
  * people he is already connected with or has a pending request with
  * (in either direction) - suggesting them again would be useless.
  */
-function recommendPeople(db, currentUser, k = 6) {
-  const me = featuresFor(db, currentUser);
+function recommendPeople(db, currentUser, k = 6, currentProfile) {
+  const me = myFeatures(currentUser, currentProfile);
 
   const excluded = new Set([currentUser.id]);
   const links = db
@@ -294,14 +333,23 @@ function recommendPeople(db, currentUser, k = 6) {
 
   const candidates = db
     .prepare(
-      "SELECT * FROM users WHERE is_active = 1 AND role != 'admin' ORDER BY name"
+      `SELECT id, name, email, role, phone, profile_pic, is_active,
+              created_at, (photo_data IS NOT NULL) AS has_photo,
+              photo_updated_at
+         FROM users WHERE is_active = 1 AND role != 'admin' ORDER BY name`
     )
     .all();
 
+  // All candidate profiles in 3 queries total (see bulkProfiles) -
+  // the scoring below reads them from memory, unchanged.
+  const profiles = bulkProfiles(db);
   const scored = [];
   for (const user of candidates) {
     if (excluded.has(user.id)) continue;
-    const features = featuresFor(db, user);
+    const features = extractFeatures(
+      user,
+      (profiles[user.role] && profiles[user.role].get(user.id)) || null
+    );
     const { score, reasons } = similarity(me, features);
     if (score <= 0) continue; // nothing in common at all
     scored.push({
@@ -327,8 +375,8 @@ function recommendPeople(db, currentUser, k = 6) {
  * course/domain keywords. score = matched keywords / all keywords.
  * Jobs the user posted himself, or already applied to, are skipped.
  */
-function recommendJobs(db, currentUser, k = 3) {
-  const me = featuresFor(db, currentUser);
+function recommendJobs(db, currentUser, k = 3, currentProfile) {
+  const me = myFeatures(currentUser, currentProfile);
 
   // The keyword set we look for inside job texts
   const keywords = new Map(); // lowercase -> display text
