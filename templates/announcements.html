@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Announcements{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="page-title mb-4"><i class="fas fa-bullhorn text-primary me-2"></i>Announcements</h2>
+
+    <div class="row">
+        {% if current_user.role == 'faculty' %}
+        <div class="col-lg-4 mb-4">
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3">Post an Announcement</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required
+                               placeholder="e.g. Guest lecture on Friday">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Details</label>
+                        <textarea name="body" class="form-control" rows="4"
+                                  placeholder="Write the announcement..."></textarea>
+                    </div>
+                    <button class="btn btn-primary w-100">
+                        <i class="fas fa-bullhorn me-1"></i> Post Announcement
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="{{ 'col-lg-8' if current_user.role == 'faculty' else 'col-lg-10 mx-auto' }}">
+            {% for a in announcements %}
+            <div class="card p-4 mb-3">
+                <div class="d-flex justify-content-between flex-wrap">
+                    <h5 class="fw-bold mb-1">{{ a.title }}</h5>
+                    <small class="text-muted">{{ a.created_at|datetimeformat }}</small>
+                </div>
+                <p class="mb-2" style="white-space: pre-line;">{{ a.body }}</p>
+                <small class="text-muted">
+                    <i class="fas fa-user me-1"></i>Posted by {{ a.faculty_name }} (Faculty)
+                </small>
+            </div>
+            {% else %}
+            <div class="card p-4 text-center text-muted">
+                <i class="fas fa-bullhorn fa-2x mb-2"></i>
+                <p class="mb-0">No announcements yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

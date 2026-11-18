@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Connections{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="page-title mb-4"><i class="fas fa-user-friends text-primary me-2"></i>My Connections</h2>
+
+    <!-- Pending requests received -->
+    {% if pending_received %}
+    <h5 class="fw-bold mb-3">Requests Received ({{ pending_received|length }})</h5>
+    <div class="row g-3 mb-4">
+        {% for u in pending_received %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-3 h-100 border border-warning">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <img src="{{ avatar_url(u) }}" class="avatar avatar-md" alt="">
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ u.name }}</h6>
+                        <span class="badge badge-role-{{ u.role }}">{{ u.role|capitalize }}</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-auto">
+                    <form method="POST" class="flex-grow-1 d-grid"
+                          action="{{ url_for('respond_connection', conn_id=u.conn_id, action='accept') }}">
+                        <button class="btn btn-sm btn-success"><i class="fas fa-check me-1"></i>Accept</button>
+                    </form>
+                    <form method="POST" class="flex-grow-1 d-grid"
+                          action="{{ url_for('respond_connection', conn_id=u.conn_id, action='reject') }}">
+                        <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times me-1"></i>Reject</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Accepted connections -->
+    <h5 class="fw-bold mb-3">Connected ({{ my_connections|length }})</h5>
+    <div class="row g-3 mb-4">
+        {% for u in my_connections %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-3 h-100 hover-lift">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <img src="{{ avatar_url(u) }}" class="avatar avatar-md" alt="">
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ u.name }}</h6>
+                        <span class="badge badge-role-{{ u.role }}">{{ u.role|capitalize }}</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="{{ url_for('profile', user_id=u.id) }}"
+                       class="btn btn-sm btn-outline-primary flex-grow-1">Profile</a>
+                    <a href="{{ url_for('conversation', user_id=u.id) }}"
+                       class="btn btn-sm btn-primary flex-grow-1">
+                        <i class="fas fa-comment me-1"></i>Message</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card p-4 text-center text-muted">
+                <p class="mb-2">You have no connections yet.</p>
+                <a href="{{ url_for('search') }}" class="btn btn-primary btn-sm">Find Members</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pending requests sent -->
+    {% if pending_sent %}
+    <h5 class="fw-bold mb-3">Requests Sent ({{ pending_sent|length }})</h5>
+    <div class="row g-3">
+        {% for u in pending_sent %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ avatar_url(u) }}" class="avatar avatar-md" alt="">
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ u.name }}</h6>
+                        <span class="badge bg-warning text-dark">Waiting for response</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

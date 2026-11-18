@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="page-title mb-4"><i class="fas fa-file-alt text-primary me-2"></i>My Applications</h2>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in applications %}
+                    <tr>
+                        <td><strong>{{ a.title }}</strong><br>
+                            <small class="text-muted">{{ a.location or '' }}</small></td>
+                        <td>{{ a.company }}</td>
+                        <td>{{ a.created_at|datetimeformat }}</td>
+                        <td>
+                            {% if a.status == 'Shortlisted' %}
+                            <span class="badge bg-success">Shortlisted</span>
+                            {% elif a.status == 'Rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                            <span class="badge bg-primary">Applied</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('job_detail', job_id=a.job_id) }}"
+                               class="btn btn-sm btn-outline-primary">View Job</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            You have not applied to any job yet.
+                            <a href="{{ url_for('jobs') }}">Browse jobs</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

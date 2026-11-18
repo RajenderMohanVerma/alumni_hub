@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h2 class="page-title mb-0">
+            Hello, {{ current_user.name }} <span class="badge badge-role-faculty align-middle">Faculty</span>
+        </h2>
+        <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-pen me-1"></i> Edit Profile
+        </a>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="row g-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-blue">
+                <div class="stat-icon"><i class="fas fa-bullhorn"></i></div>
+                <div><div class="stat-number">{{ stats.announcements }}</div>
+                    <div>My Announcements</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+                <div><div class="stat-number">{{ stats.connections }}</div>
+                    <div>My Connections</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-orange">
+                <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                <div><div class="stat-number">{{ stats.students }}</div>
+                    <div>Total Students</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-purple">
+                <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                <div><div class="stat-number">{{ stats.unread_messages }}</div>
+                    <div>Unread Messages</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick links -->
+    <div class="row g-3 mt-2">
+        <div class="col-md-4">
+            <a href="{{ url_for('announcements') }}" class="text-decoration-none">
+                <div class="card p-4 text-center hover-lift h-100">
+                    <i class="fas fa-bullhorn fa-2x text-primary mb-2"></i>
+                    <h6 class="text-dark mb-0">Announcements</h6>
+                    <small class="text-muted">Post &amp; view announcements</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('search') }}" class="text-decoration-none">
+                <div class="card p-4 text-center hover-lift h-100">
+                    <i class="fas fa-search fa-2x text-success mb-2"></i>
+                    <h6 class="text-dark mb-0">Find Members</h6>
+                    <small class="text-muted">Search students &amp; alumni</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('jobs') }}" class="text-decoration-none">
+                <div class="card p-4 text-center hover-lift h-100">
+                    <i class="fas fa-briefcase fa-2x text-warning mb-2"></i>
+                    <h6 class="text-dark mb-0">Browse Jobs</h6>
+                    <small class="text-muted">See what alumni are offering</small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {% if profile %}
+    <div class="card mt-4 p-4">
+        <h5 class="fw-bold mb-3">My Profile Summary</h5>
+        <div class="row small">
+            <div class="col-md-3"><strong>Department:</strong> {{ profile.department or '-' }}</div>
+            <div class="col-md-3"><strong>Designation:</strong> {{ profile.designation or '-' }}</div>
+            <div class="col-md-3"><strong>Qualification:</strong> {{ profile.qualification or '-' }}</div>
+            <div class="col-md-3"><strong>Skills:</strong> {{ profile.skills or '-' }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

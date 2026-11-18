@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="page-title mb-4">
+        <i class="fas fa-shield-alt text-danger me-2"></i>Admin Dashboard
+        <span class="badge badge-role-admin align-middle">Admin</span>
+    </h2>
+
+    <!-- Stat cards -->
+    <div class="row g-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-blue">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div><div class="stat-number">{{ counts.total_users }}</div>
+                    <div>Total Users</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
+                <div><div class="stat-number">{{ counts.jobs }}</div>
+                    <div>Total Jobs</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-orange">
+                <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                <div><div class="stat-number">{{ counts.applications }}</div>
+                    <div>Applications</div></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-purple">
+                <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+                <div><div class="stat-number">{{ counts.connections }}</div>
+                    <div>Connections</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-2">
+        <!-- Chart: users by role (Chart.js) -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-3">Users by Role</h5>
+                <canvas id="roleChart" height="220"></canvas>
+            </div>
+        </div>
+        <!-- Recently registered users -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-3">Recently Registered Users</h5>
+                <div class="list-group list-group-flush">
+                    {% for u in recent_users %}
+                    <div class="list-group-item d-flex align-items-center gap-2 px-0">
+                        <img src="{{ avatar_url(u) }}" class="avatar avatar-sm" alt="">
+                        <span class="flex-grow-1">
+                            <strong>{{ u.name }}</strong><br>
+                            <small class="text-muted">{{ u.email }}</small>
+                        </span>
+                        <span class="badge badge-role-{{ u.role }}">{{ u.role|capitalize }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No users yet.</p>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-users me-1"></i> Manage Users
+                    </a>
+                    <a href="{{ url_for('admin_jobs') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-briefcase me-1"></i> Manage Jobs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js (CDN) - draws the bar chart of users by role -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    new Chart(document.getElementById('roleChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Students', 'Alumni', 'Faculty'],
+            datasets: [{
+                label: 'Number of users',
+                data: [{{ counts.students }}, {{ counts.alumni }}, {{ counts.faculty }}],
+                backgroundColor: ['#2563eb', '#059669', '#7c3aed'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+</script>
+{% endblock %}

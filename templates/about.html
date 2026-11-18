@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 820px;">
+    <div class="card p-4 p-md-5">
+        <h2 class="page-title mb-3"><i class="fas fa-circle-info text-primary me-2"></i>About Alumni Hub</h2>
+        <p>
+            <strong>Alumni Hub</strong> is a web application that connects the
+            <strong>students</strong>, <strong>alumni</strong> and <strong>faculty</strong>
+            members of a college on a single platform. Students can find and connect
+            with alumni for guidance, alumni can share job openings from their
+            companies, and faculty can post announcements for everyone.
+        </p>
+        <h5 class="mt-4">Main Modules</h5>
+        <ul>
+            <li><strong>User Management</strong> - registration, login and role-based access (Student / Alumni / Faculty / Admin)</li>
+            <li><strong>Profiles</strong> - every member has a profile with photo, skills and role-specific details</li>
+            <li><strong>Connections</strong> - send, accept and reject connection requests</li>
+            <li><strong>Messaging</strong> - simple one-to-one chat between members</li>
+            <li><strong>Job Portal</strong> - alumni post jobs, students apply, alumni manage applicants</li>
+            <li><strong>Announcements &amp; Notifications</strong> - faculty announcements and activity alerts</li>
+            <li><strong>Admin Panel</strong> - user and job management with basic statistics</li>
+        </ul>
+        <h5 class="mt-4">Technology Used</h5>
+        <p class="mb-0">
+            <span class="badge bg-primary">Python</span>
+            <span class="badge bg-primary">Flask</span>
+            <span class="badge bg-secondary">SQLite</span>
+            <span class="badge bg-info text-dark">Jinja2</span>
+            <span class="badge bg-dark">Bootstrap 5</span>
+            <span class="badge bg-warning text-dark">JavaScript</span>
+        </p>
+        <p class="text-muted small mt-3 mb-0">
+            This project was developed as an MCA Minor Project.
+        </p>
+    </div>
+</div>
+{% endblock %}

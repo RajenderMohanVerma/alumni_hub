@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Job' if job else 'Post a Job' }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-briefcase text-primary me-1"></i>
+                    {{ 'Edit Job' if job else 'Post a New Job' }}
+                </h4>
+                <!-- Same form is used for creating (job = None) and editing a job -->
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Job Title</label>
+                        <input type="text" name="title" class="form-control" required
+                               placeholder="e.g. Software Developer Intern"
+                               value="{{ job.title if job else '' }}">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" name="company" class="form-control" required
+                                   placeholder="e.g. TCS"
+                                   value="{{ job.company if job else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" class="form-control"
+                                   placeholder="e.g. Pune / Remote"
+                                   value="{{ job.location if job and job.location else '' }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Salary / Stipend</label>
+                            <input type="text" name="salary" class="form-control"
+                                   placeholder="e.g. 4.5 LPA or 25,000/month"
+                                   value="{{ job.salary if job and job.salary else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Date to Apply</label>
+                            <input type="date" name="deadline" class="form-control"
+                                   value="{{ job.deadline if job and job.deadline else '' }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="5"
+                                  placeholder="Job role, responsibilities, required skills...">{{ job.description if job and job.description else '' }}</textarea>
+                    </div>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> {{ 'Save Changes' if job else 'Post Job' }}
+                    </button>
+                    <a href="{{ url_for('my_jobs') }}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

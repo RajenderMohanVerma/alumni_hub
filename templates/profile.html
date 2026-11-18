@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+                    <img src="{{ avatar_url(user) }}" class="avatar avatar-lg" alt="{{ user.name }}">
+                    <div class="text-center text-md-start flex-grow-1">
+                        <h3 class="fw-bold mb-1">{{ user.name }}
+                            <span class="badge badge-role-{{ user.role }} align-middle">{{ user.role|capitalize }}</span>
+                        </h3>
+                        <p class="text-muted mb-1"><i class="fas fa-envelope me-1"></i>{{ user.email }}
+                            {% if user.phone %}&nbsp;&middot;&nbsp;<i class="fas fa-phone me-1"></i>{{ user.phone }}{% endif %}
+                        </p>
+                        <p class="text-muted small mb-3">Member since {{ user.created_at|datetimeformat }}</p>
+
+                        {% if user.id == current_user.id %}
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-pen me-1"></i> Edit Profile
+                        </a>
+                        {% elif status == 'accepted' %}
+                        <span class="badge bg-success p-2"><i class="fas fa-check me-1"></i> Connected</span>
+                        <a href="{{ url_for('conversation', user_id=user.id) }}" class="btn btn-primary btn-sm ms-1">
+                            <i class="fas fa-comment me-1"></i> Message
+                        </a>
+                        {% elif status == 'pending_sent' %}
+                        <span class="badge bg-warning text-dark p-2"><i class="fas fa-clock me-1"></i> Request Sent</span>
+                        {% elif status == 'pending_received' %}
+                        <a href="{{ url_for('connections') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-user-check me-1"></i> Respond to Request
+                        </a>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('send_connection', user_id=user.id) }}" class="d-inline">
+                            <button class="btn btn-primary btn-sm">
+                                <i class="fas fa-user-plus me-1"></i> Connect
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if profile %}
+                <hr>
+                <div class="row g-3">
+                    {% if user.role == 'student' %}
+                    <div class="col-md-4"><strong>Course</strong><br>{{ profile.course or '-' }}</div>
+                    <div class="col-md-4"><strong>Branch</strong><br>{{ profile.branch or '-' }}</div>
+                    <div class="col-md-4"><strong>Year</strong><br>{{ profile.year or '-' }}</div>
+                    {% elif user.role == 'alumni' %}
+                    <div class="col-md-4"><strong>Company</strong><br>{{ profile.company or '-' }}</div>
+                    <div class="col-md-4"><strong>Designation</strong><br>{{ profile.designation or '-' }}</div>
+                    <div class="col-md-4"><strong>Experience</strong><br>{{ profile.experience or '-' }}</div>
+                    {% elif user.role == 'faculty' %}
+                    <div class="col-md-4"><strong>Department</strong><br>{{ profile.department or '-' }}</div>
+                    <div class="col-md-4"><strong>Designation</strong><br>{{ profile.designation or '-' }}</div>
+                    <div class="col-md-4"><strong>Qualification</strong><br>{{ profile.qualification or '-' }}</div>
+                    {% endif %}
+                    <div class="col-12"><strong>Skills</strong><br>{{ profile.skills or '-' }}</div>
+                    <div class="col-12"><strong>About</strong><br>{{ profile.bio or 'No bio added yet.' }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
