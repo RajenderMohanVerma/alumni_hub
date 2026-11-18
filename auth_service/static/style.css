@@ -24,25 +24,421 @@ main {
     flex: 1;
 }
 
-/* ---------- Navbar ---------- */
-.navbar-ah {
-    background: linear-gradient(90deg, var(--ah-primary-dark), var(--ah-primary));
-    box-shadow: 0 2px 10px rgba(30, 64, 175, 0.35);
+/* ==========================================================================
+   HEADER / NAVBAR (redesigned)
+   One gradient bar shared by every page of BOTH apps (the auth service
+   loads a byte-identical copy of this stylesheet). Pieces:
+     #mainNavbar          the sticky gradient bar + animated sheen
+     .ah-brand-*          logo badge, wordmark and tagline
+     .nav-link            pill links (hover lift; active = pill + dot)
+     .ah-btn-ghost        guest "Login" outline pill
+     .ah-btn-register     guest "Register" white pill with shine sweep
+     .ah-icon-btn         round icon button (notification bell)
+     .ah-profile-toggle   avatar trigger with a white ring
+     .ah-dropdown-header  rich user block inside the profile menu
+     .ah-toggler          hamburger button that morphs into an X
+   main.js toggles .scrolled on #mainNavbar after a few px of scrolling;
+   the auth pages run a 6-line copy of the same toggle inline.
+   ========================================================================== */
+
+/* The bar: deep-blue -> primary gradient (same family as the hero),
+   a soft shadow, and generous padding that tightens when scrolled. */
+#mainNavbar {
+    background: linear-gradient(100deg, #1e3a8a 0%, var(--ah-primary-dark) 38%, var(--ah-primary) 78%, #2f7de1 100%);
+    box-shadow: 0 2px 12px rgba(30, 64, 175, 0.35);
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    transition: padding 0.3s ease, box-shadow 0.3s ease;
 }
 
-.navbar-ah .nav-link {
-    color: rgba(255, 255, 255, 0.85);
-    transition: color 0.2s ease;
+#mainNavbar.scrolled {
+    padding-top: 0.32rem;
+    padding-bottom: 0.32rem;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.32);
 }
 
-.navbar-ah .nav-link:hover,
-.navbar-ah .nav-link.active {
+/* Animated sheen: a soft white band drifting slowly across the bar.
+   It lives on a ::before layer UNDER the content (the .container is
+   lifted into its own stacking level), so dropdown menus that spill
+   out of the bar are never clipped or covered by it. */
+#mainNavbar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.13) 50%, transparent 68%);
+    background-size: 250% 100%;
+    background-position: 120% 0;
+    animation: navSheen 9s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes navSheen {
+    0%, 100% { background-position: 120% 0; }
+    50%      { background-position: -20% 0; }
+}
+
+#mainNavbar > .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------- Brand: logo badge + wordmark + tagline ---------- */
+.ah-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem;
+}
+
+/* The logo sits inside a translucent rounded tile with a soft inner
+   highlight; on hover the tile tips and grows a little. */
+.ah-brand-badge {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: 13px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+                inset 0 -6px 12px rgba(30, 64, 175, 0.25),
+                0 3px 8px rgba(15, 23, 42, 0.22);
+    transition: transform 0.35s ease;
+}
+
+.ah-brand-badge img {
+    width: 34px;
+    height: 34px;
+    display: block;
+}
+
+.ah-brand:hover .ah-brand-badge {
+    transform: rotate(-7deg) scale(1.07);
+}
+
+.ah-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.ah-brand-name {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
     color: #fff;
 }
 
-.navbar-ah .badge {
-    font-size: 0.65rem;
-    vertical-align: top;
+.ah-brand-tagline {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+    margin-top: 0.18rem;
+}
+
+@media (max-width: 767.98px) {
+    .ah-brand-tagline { display: none; }
+    .ah-brand-badge { width: 40px; height: 40px; }
+    .ah-brand-badge img { width: 30px; height: 30px; }
+}
+
+/* ---------- Pill navigation links ---------- */
+#mainNavbar .nav-link {
+    position: relative;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 500;
+    border-radius: 999px;
+    padding: 0.45rem 0.85rem;
+    margin: 0.1rem 0.08rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+#mainNavbar .nav-link:hover,
+#mainNavbar .nav-link:focus {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+
+/* Current page: a solid translucent pill, bold text and a small
+   white dot in front, so it is obvious without any underline. */
+#mainNavbar .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.26);
+    font-weight: 700;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+#mainNavbar .nav-link.active:not(.ah-icon-btn)::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+}
+
+/* Keyboard users keep a clearly visible focus ring */
+#mainNavbar .nav-link:focus-visible,
+#mainNavbar .navbar-brand:focus-visible,
+#mainNavbar .ah-toggler:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+#mainNavbar .dropdown-item:focus-visible {
+    outline: 2px solid var(--ah-primary);
+    outline-offset: -2px;
+}
+
+/* ---------- Guest actions: ghost Login, solid Register ---------- */
+#mainNavbar .ah-btn-ghost {
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    padding-left: 1.05rem;
+    padding-right: 1.05rem;
+}
+
+#mainNavbar .ah-btn-ghost:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+#mainNavbar .ah-btn-ghost.active {
+    border-color: #fff;
+}
+
+/* White Register pill; a shine band sweeps across it on hover */
+#mainNavbar .ah-btn-register {
+    position: relative;
+    overflow: hidden;
+    border-radius: 999px;
+    padding: 0.5rem 1.15rem;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.25);
+}
+
+#mainNavbar .ah-btn-register::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -90%;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(37, 99, 235, 0.28), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+    pointer-events: none;
+}
+
+#mainNavbar .ah-btn-register:hover::after {
+    left: 140%;
+}
+
+/* ---------- Round icon button (notification bell) ---------- */
+#mainNavbar .ah-icon-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.15rem;
+}
+
+#mainNavbar .ah-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: none;
+}
+
+#mainNavbar .ah-icon-btn.active {
+    background: rgba(255, 255, 255, 0.26);
+}
+
+/* ---------- Profile trigger: ringed avatar + first name ---------- */
+#mainNavbar .ah-profile-toggle {
+    font-weight: 600;
+}
+
+/* Only the styling changes here - the img keeps its avatar classes */
+#mainNavbar .ah-profile-toggle .avatar {
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28), 0 2px 6px rgba(15, 23, 42, 0.3);
+}
+
+/* ---------- Dropdown menus (Admin + profile) ---------- */
+#mainNavbar .dropdown-menu {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.24);
+    padding: 0.5rem;
+    margin-top: 0.55rem;
+    animation: ahDropIn 0.22s ease both;
+}
+
+@keyframes ahDropIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+#mainNavbar .dropdown-item {
+    border-radius: 9px;
+    padding: 0.52rem 0.75rem;
+    font-weight: 500;
+    color: #334155;
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+#mainNavbar .dropdown-item i {
+    display: inline-block;
+    width: 1.15rem;
+    text-align: center;
+    margin-right: 0.45rem;
+    color: var(--ah-primary);
+}
+
+#mainNavbar .dropdown-item:hover,
+#mainNavbar .dropdown-item:focus {
+    background: #eef4ff;
+    color: var(--ah-primary-dark);
+    transform: translateX(3px);
+}
+
+/* Rich header block at the top of the profile menu: avatar, name,
+   email and role on a soft blue gradient band. */
+.ah-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem;
+    margin: -0.5rem -0.5rem 0.5rem;
+    background: linear-gradient(120deg, #eef4ff, #e0f2fe);
+    border-bottom: 1px solid #dbe7ff;
+    border-radius: 14px 14px 0 0;
+}
+
+.ah-dropdown-header .avatar {
+    border-color: #fff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+}
+
+.ah-dropdown-user {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.25;
+    min-width: 0;
+}
+
+.ah-dropdown-name {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.ah-dropdown-email {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-bottom: 0.3rem;
+    word-break: break-all;
+}
+
+/* ---------- Hamburger button that morphs into an X ---------- */
+#mainNavbar .ah-toggler {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.5rem 0.55rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    border-radius: 11px;
+    box-shadow: none;
+}
+/* Desktop (navbar-expand-lg): the toggler stays hidden — it is a mobile control. */
+@media (min-width: 992px) {
+    #mainNavbar .ah-toggler { display: none; }
+}
+
+.ah-toggler-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+    transition: transform 0.3s ease, opacity 0.2s ease;
+}
+
+/* Bootstrap sets aria-expanded="true" on the button while open */
+#mainNavbar .ah-toggler[aria-expanded="true"] .ah-toggler-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+#mainNavbar .ah-toggler[aria-expanded="true"] .ah-toggler-bar:nth-child(2) {
+    opacity: 0;
+}
+
+#mainNavbar .ah-toggler[aria-expanded="true"] .ah-toggler-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---------- Mobile: the collapsed menu becomes a panel ---------- */
+@media (max-width: 991.98px) {
+    #mainNavbar {
+        border-radius: 0 0 16px 16px;
+    }
+
+    #mainNavbar .navbar-collapse.show {
+        animation: ahPanelIn 0.3s ease both;
+    }
+
+    #mainNav {
+        padding: 0.7rem 0.15rem 0.85rem;
+        margin-top: 0.55rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    /* Full-width pill rows with a comfortable tap height */
+    #mainNavbar .navbar-nav .nav-link {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        margin: 0.12rem 0;
+    }
+
+    /* The bell becomes a labelled row, like the other links */
+    #mainNavbar .ah-icon-btn {
+        width: 100%;
+        height: 44px;
+        border-radius: 999px;
+        justify-content: flex-start;
+        padding-left: 0.85rem;
+    }
+
+    #mainNavbar .ah-icon-btn::after {
+        content: "Notifications";
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-left: 0.55rem;
+    }
+
+    #mainNavbar .ah-btn-register {
+        display: block;
+        text-align: center;
+        margin: 0.35rem 0 0.15rem !important;
+    }
+}
+
+@keyframes ahPanelIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- Cards & buttons ---------- */
@@ -245,30 +641,6 @@ html.js .reveal.visible {
     .hero { animation: none; }
 }
 
-/* ---------- Navbar link underline effect ---------- */
-.navbar-ah .nav-link {
-    position: relative;
-}
-
-.navbar-ah .nav-link:not(.dropdown-toggle)::after {
-    content: "";
-    position: absolute;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.3rem;
-    height: 2px;
-    border-radius: 2px;
-    background: #fff;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease;
-}
-
-.navbar-ah .nav-link:not(.dropdown-toggle):hover::after,
-.navbar-ah .nav-link:not(.dropdown-toggle).active::after {
-    transform: scaleX(1);
-}
-
 /* ---------- Rich footer (base.html) ---------- */
 .site-footer {
     background: #0f172a;
@@ -383,40 +755,8 @@ main {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---------- Navbar: deeper shadow once the page is scrolled ----------
-   (main.js adds .scrolled to #mainNavbar; the navbar is sticky-top) */
-#mainNavbar {
-    transition: box-shadow 0.25s ease;
-}
-
-#mainNavbar.scrolled {
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.28) !important;
-}
-
-/* Underline grow effect for the real navbar links (same idea as the
-   .navbar-ah rules above, applied to the navbar the pages actually use) */
-#mainNavbar .nav-link {
-    position: relative;
-}
-
-#mainNavbar .nav-link:not(.dropdown-toggle)::after {
-    content: "";
-    position: absolute;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.3rem;
-    height: 2px;
-    border-radius: 2px;
-    background: #fff;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease;
-}
-
-#mainNavbar .nav-link:not(.dropdown-toggle):hover::after,
-#mainNavbar .nav-link:not(.dropdown-toggle).active::after {
-    transform: scaleX(1);
-}
+/* (Navbar styles live in the "HEADER / NAVBAR" section near the top
+   of this file - the .scrolled shadow/shrink included.) */
 
 /* Notification / chat count badges sit on the corner of the nav icon */
 .badge-dot {
@@ -816,4 +1156,12 @@ main {
     .btn, .filter-chip { transition: none; }
     .feature-card:hover, .action-card:hover, .member-card:hover,
     .job-card:hover, .btn:hover { transform: none; }
+    /* Header: no sheen, no dropdown/panel animation, no hover motion */
+    #mainNavbar, #mainNavbar .nav-link, .ah-brand-badge,
+    .ah-toggler-bar, #mainNavbar .ah-btn-register::after,
+    #mainNavbar .dropdown-item { transition: none; }
+    #mainNavbar::before, #mainNavbar .dropdown-menu,
+    #mainNavbar .navbar-collapse.show { animation: none; }
+    #mainNavbar .nav-link:hover, #mainNavbar .dropdown-item:hover,
+    .ah-brand:hover .ah-brand-badge { transform: none; }
 }

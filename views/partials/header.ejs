@@ -12,6 +12,7 @@
   <link href="/css/style.css" rel="stylesheet">
   <!-- PWA: web app manifest + theme colour, so phones can install
        Alumni Hub on the home screen (see /sw.js and /js/main.js) -->
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#2563eb">
   <meta name="mobile-web-app-capable" content="yes">
@@ -23,15 +24,24 @@
 <body class="d-flex flex-column min-vh-100<%= currentUser ? ' has-mobile-nav' : '' %>" data-section="<%= navSection %>">
 
 <!-- ======================= NAVBAR ======================= -->
-<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
+<!-- Redesigned header: gradient bar, badge brand, pill links.
+     All styling lives in the "HEADER / NAVBAR" section of style.css;
+     behaviour (the .scrolled shrink/shadow) is toggled by main.js. -->
+<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="/">
-      <i class="bi bi-mortarboard-fill"></i> Alumni Hub
+    <a class="navbar-brand ah-brand" href="/">
+      <span class="ah-brand-badge"><img src="/images/logo.svg" alt="Alumni Hub logo"></span>
+      <span class="ah-brand-text">
+        <span class="ah-brand-name">Alumni Hub</span>
+        <span class="ah-brand-tagline">Connect · Grow · Succeed</span>
+      </span>
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+    <button class="navbar-toggler ah-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#mainNav" aria-controls="mainNav"
             aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+      <span class="ah-toggler-bar"></span>
+      <span class="ah-toggler-bar"></span>
+      <span class="ah-toggler-bar"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="mainNav">
@@ -102,7 +112,7 @@
         </li>
         <% } %>
         <li class="nav-item">
-          <a class="nav-link position-relative <%= navSection === 'notifications' ? 'active' : '' %>" href="/notifications"
+          <a class="nav-link ah-icon-btn position-relative <%= navSection === 'notifications' ? 'active' : '' %>" href="/notifications"
              title="Notifications">
             <i class="bi bi-bell"></i>
             <% if (unreadNotifications) { %>
@@ -112,19 +122,21 @@
         </li>
         <!-- Profile dropdown -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
+          <a class="nav-link dropdown-toggle ah-profile-toggle d-flex align-items-center gap-2" href="#"
              role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <img src="<%= avatarUrl(currentUser) %>" alt="avatar" class="avatar avatar-sm me-1">
             <span><%= currentUser.name.split(' ')[0] %></span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <span class="dropdown-item-text small text-muted">
-                <%= currentUser.email %><br>
+            <!-- Rich header block: who is signed in -->
+            <li class="ah-dropdown-header">
+              <img src="<%= avatarUrl(currentUser) %>" alt="" class="avatar avatar-sm">
+              <span class="ah-dropdown-user">
+                <span class="ah-dropdown-name"><%= currentUser.name %></span>
+                <span class="ah-dropdown-email"><%= currentUser.email %></span>
                 <span class="badge bg-secondary"><%= capitalize(currentUser.role) %></span>
               </span>
             </li>
-            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/profile/<%= currentUser.id %>"><i class="bi bi-person"></i> My Profile</a></li>
             <li><a class="dropdown-item" href="/profile/edit"><i class="bi bi-pencil-square"></i> Edit Profile</a></li>
             <% if (currentUser.role === 'student') { %>
@@ -141,12 +153,12 @@
       </ul>
       <% } else { %>
       <!-- Links for guests (login/register live on the Python auth service) -->
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
         <li class="nav-item">
-          <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+          <a class="nav-link ah-btn-ghost" href="/login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
         </li>
         <li class="nav-item">
-          <a class="btn btn-light btn-sm mt-1 ms-lg-2 fw-semibold" href="/register">Register</a>
+          <a class="btn btn-light btn-sm mt-1 ms-lg-2 fw-semibold ah-btn-register" href="/register">Register</a>
         </li>
       </ul>
       <% } %>

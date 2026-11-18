@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    Alumni Hub logo mark (the ONE logo used everywhere: header badge,
+    favicon, install sheet, PWA icons - the PNG icons are rendered
+    from this file).
+
+    Design: a blue-gradient squircle in the site's brand colours
+    (#2563eb -> #38bdf8, diagonal, same family as the hero/header).
+    Inside, a large white graduation cap (the Bootstrap Icons
+    mortarboard-fill glyph, both paths, scaled to ~65% of the box)
+    stands for the alumni/students. Beneath it, two small dots and a
+    gentle arc form an abstract pair of people on a "smile" curve -
+    the community/connection the hub is about. A soft white sheen at
+    the top gives the tile depth. No text inside the mark, so it
+    stays readable down to favicon size.
+  -->
+  <title>Alumni Hub logo</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.20"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle tile + soft top highlight -->
+  <rect width="512" height="512" rx="113" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="113" fill="url(#sheen)"/>
+
+  <!-- People motif: two heads resting on a shared smile-like arc -->
+  <g fill="#ffffff" opacity="0.9">
+    <circle cx="136" cy="396" r="12"/>
+    <circle cx="376" cy="396" r="12"/>
+  </g>
+  <path d="M148 414 Q256 466 364 414" fill="none" stroke="#ffffff"
+        stroke-width="12" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Graduation cap (mortarboard-fill, both paths) -->
+  <g transform="translate(84 30) scale(21.5)" fill="#ffffff">
+    <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917z"/>
+    <path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466z"/>
+  </g>
+</svg>
