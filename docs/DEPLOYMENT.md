@@ -55,6 +55,8 @@ Notes:
 | `APP_URL` | both | Public URL of the main app (default `http://127.0.0.1:3000`); the auth service redirects users back here. |
 | `PORT` | main app | Port of the Express app (default 3000). |
 | `VERCEL` | — (automatic) | Set by Vercel itself; both services only read it to switch database/upload paths to `/tmp`. Never set it locally. |
+| `TURSO_DATABASE_URL` | both | Optional. URL of the shared Turso cloud database (`libsql://…`). When set, both services use that one remote database instead of a local SQLite file. Must be the SAME in both services. |
+| `TURSO_AUTH_TOKEN` | both | Access token for the Turso database above. Must be the SAME in both services. |
 
 ## 2. GitHub Repository
 
@@ -100,7 +102,41 @@ writable, and `/tmp` is temporary. Both services handle this with the
 Because `/tmp` can be wiped on a cold start, **data on the Vercel demo
 can reset** — registrations made on the demo may disappear, but the
 seeded demo accounts always come back. This is accepted for a demo; see
-[MEMORY.md](MEMORY.md) for the reasoning.
+[MEMORY.md](MEMORY.md) for the reasoning. To make registrations on the
+demo actually work and persist, use the shared Turso database below.
+
+### Shared database (Turso) — recommended for the Vercel demo
+
+The two Vercel projects are separate deployments with **separate
+`/tmp` folders**, so with local SQLite files the auth service and the
+main app each keep their *own* database: a visitor can register
+successfully, yet the main app has never heard of them (login then
+fails with "Account not found or blocked", and the admin never sees
+the new user). The demo accounts only work because both copies seed
+the same data.
+
+The fix is one shared cloud database ([Turso](https://turso.tech),
+free tier is enough):
+
+1. Create a Turso database and note its `libsql://…` URL and an auth
+   token (`turso db create alumni-hub`, then
+   `turso db show --url alumni-hub` and
+   `turso db tokens create alumni-hub`, or the Turso web dashboard).
+2. In **both** Vercel projects (main app *and* auth service), set:
+   - `TURSO_DATABASE_URL` = the `libsql://…` URL
+   - `TURSO_AUTH_TOKEN` = the token
+3. Redeploy both projects.
+
+From then on both services read and write the **same** remote
+database (`models.js` uses the `libsql` npm driver, `auth.py` the
+`libsql` Python package): registrations appear in the admin panel
+immediately, logins work, and data survives cold starts. If the
+shared database is still empty, whichever service starts first seeds
+the demo data (both check whether the users table is empty and insert
+with `INSERT OR IGNORE`, so they cannot duplicate each other).
+Profile-picture uploads still live in `/tmp` and remain temporary on
+Vercel. Locally nothing changes: with the two variables unset, both
+services keep using the local `alumni_hub.db` file as always.
 
 ### Troubleshooting
 

@@ -64,15 +64,23 @@ app.use(express.static(path.join(__dirname, "public")));
 models.initDb();
 fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
 
-// On Vercel the database starts empty, so fill the demo data on boot
-// (same idea as the old Python app's cold-start seeding).
-if (config.ON_VERCEL) {
+// On Vercel - and whenever the shared Turso database is used - the
+// database can start out empty, so fill the demo data on boot whenever
+// the users table is empty (same idea as the auth service's seeding).
+// seedDemoData() only uses INSERT OR IGNORE, and a failure here is
+// logged instead of crashing the boot, so the two services can never
+// break each other even if they seed at the same moment.
+if (config.ON_VERCEL || config.TURSO_DATABASE_URL) {
   const userCount = models
     .openDb()
     .prepare("SELECT COUNT(*) AS c FROM users")
     .get().c;
   if (userCount === 0) {
-    require("./seed").seedDemoData();
+    try {
+      require("./seed").seedDemoData();
+    } catch (err) {
+      console.error("WARNING: demo auto-seed failed:", err.message);
+    }
   }
 }
 

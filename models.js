@@ -9,14 +9,18 @@
  *      (profiles, notifications, unread counters)
  *
  * The routes in app.js use these helpers and run simple SQL queries
- * through the `better-sqlite3` package, which is synchronous - so the
- * code reads almost exactly like the old Python/sqlite3 version.
+ * through a synchronous SQLite driver, so the code reads almost
+ * exactly like the old Python/sqlite3 version. Which driver is used
+ * depends on the configuration (see openDb below):
+ *   - default: the local database file, through `better-sqlite3`
+ *   - when TURSO_DATABASE_URL is set: the shared Turso cloud
+ *     database, through the `libsql` package (same synchronous API)
  *
  * NOTE: this file never touches passwords. Password hashes are created
  * and checked ONLY by the Python auth service (Werkzeug scrypt).
  */
 
-const Database = require("better-sqlite3");
+const BetterSqlite3 = require("better-sqlite3");
 const config = require("./config");
 
 // ---------------------------------------------------------------------------
@@ -25,16 +29,63 @@ const config = require("./config");
 let db = null;
 
 /**
- * Open (once) and return the shared SQLite connection.
+ * Open (once) and return the shared database connection.
  * Rows come back as plain objects: row.name, row.email, ...
  */
 function openDb() {
   if (db === null) {
-    db = new Database(config.DATABASE);
+    db = config.TURSO_DATABASE_URL ? openTursoDb() : new BetterSqlite3(config.DATABASE);
     // Switch ON foreign-key support so ON DELETE CASCADE works
     db.pragma("foreign_keys = ON");
   }
   return db;
+}
+
+/**
+ * Remove the "_metadata" property (query timing info) that the libsql
+ * driver adds to rows it returns. better-sqlite3 rows do not have it,
+ * and neither templates nor JSON responses should ever see it.
+ */
+function stripMetadata(row) {
+  if (row && typeof row === "object" && "_metadata" in row) {
+    const clean = { ...row };
+    delete clean._metadata;
+    return clean;
+  }
+  return row;
+}
+
+/**
+ * Open the shared Turso (libSQL) database. The `libsql` package is a
+ * synchronous driver with the same prepare/run/get/all API as
+ * better-sqlite3, so no route code had to change; the only adaptation
+ * is wrapping prepare() so returned rows lose their "_metadata".
+ * The package is required lazily so local runs without it (and
+ * without Turso) are completely unaffected.
+ */
+function openTursoDb() {
+  let LibsqlDatabase;
+  try {
+    LibsqlDatabase = require("libsql");
+  } catch (err) {
+    throw new Error(
+      "TURSO_DATABASE_URL is set but the 'libsql' package is not " +
+        "installed. Run 'npm install' first."
+    );
+  }
+  const remote = new LibsqlDatabase(config.TURSO_DATABASE_URL, {
+    authToken: config.TURSO_AUTH_TOKEN || undefined,
+  });
+  const prepare = remote.prepare.bind(remote);
+  remote.prepare = (sql) => {
+    const stmt = prepare(sql);
+    const get = stmt.get.bind(stmt);
+    const all = stmt.all.bind(stmt);
+    stmt.get = (...args) => stripMetadata(get(...args));
+    stmt.all = (...args) => all(...args).map(stripMetadata);
+    return stmt;
+  };
+  return remote;
 }
 
 // ---------------------------------------------------------------------------

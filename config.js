@@ -48,6 +48,17 @@ const UPLOAD_DIR = ON_VERCEL
   ? "/tmp/uploads"
   : path.join(BASE_DIR, "uploads");
 
+// Optional SHARED cloud database (Turso / libSQL). On Vercel the two
+// services run as separate projects, so a local SQLite file can never
+// be shared between them (each project has its own /tmp) - which is
+// why new registrations used to vanish before reaching the main app.
+// When TURSO_DATABASE_URL is set, BOTH services use the same remote
+// database instead of a local file (see models.js and auth.py). When
+// it is not set, nothing changes: the local file above is used.
+// TURSO_AUTH_TOKEN is the access token of that database.
+const TURSO_DATABASE_URL = process.env.TURSO_DATABASE_URL || "";
+const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN || "";
+
 // Only these image types are allowed for profile pictures
 const ALLOWED_EXTENSIONS = [".png", ".jpg", ".jpeg"];
 
@@ -62,6 +73,8 @@ module.exports = {
   AUTH_SECRET,
   DATABASE,
   UPLOAD_DIR,
+  TURSO_DATABASE_URL,
+  TURSO_AUTH_TOKEN,
   ALLOWED_EXTENSIONS,
   MAX_UPLOAD_SIZE,
   ON_VERCEL,

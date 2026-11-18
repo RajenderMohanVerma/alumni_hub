@@ -22,7 +22,8 @@ signed TOKENS this service creates.
 How the token handoff works:
     1. The user submits the login form to this service (port 5001).
     2. This service checks email + password against the SAME database
-       file the Express app uses (../alumni_hub.db).
+       the Express app uses (the local ../alumni_hub.db file, or the
+       shared Turso cloud database when TURSO_DATABASE_URL is set).
     3. On success it builds a token:
            payload = {"uid": id, "email": ..., "role": ...,
                       "exp": now + 6 hours}
@@ -68,6 +69,18 @@ if os.environ.get("VERCEL"):
 else:
     DATABASE = os.path.join(BASE_DIR, "alumni_hub.db")
 
+# Optional SHARED cloud database (Turso / libSQL). On Vercel this
+# service and the Express app run as separate projects, each with its
+# own /tmp - so a local SQLite file can never be shared between them,
+# and new registrations used to never reach the main app. When
+# TURSO_DATABASE_URL is set, BOTH services use the same remote
+# database instead (the Express app reads the same variables in
+# config.js). When it is not set, the local file above is used
+# exactly as before.
+TURSO_DATABASE_URL = os.environ.get("TURSO_DATABASE_URL", "")
+TURSO_AUTH_TOKEN = os.environ.get("TURSO_AUTH_TOKEN", "")
+USE_TURSO = bool(TURSO_DATABASE_URL)
+
 PORT = 5001
 
 app = Flask(__name__)
@@ -80,12 +93,100 @@ def inject_app_url():
 
 
 # ---------------------------------------------------------------------------
-# Database helpers (same database file + same schema as the Express app)
+# Database helpers (same database + same schema as the Express app)
 # ---------------------------------------------------------------------------
-def get_db():
-    """Open a connection whose rows can be read by column name."""
+# There are two ways to connect, behind ONE interface:
+#   - default: a local SQLite file through the standard sqlite3 module
+#   - Turso mode (TURSO_DATABASE_URL set): the remote libSQL database
+#     through the `libsql` package, wrapped in the small adapter
+#     classes below so the rest of this file - and seed.py - can use
+#     it exactly like sqlite3, including reading row values by column
+#     name (row["email"]). Plain libsql rows are tuples without column
+#     names, which is the one gap the adapter fills.
+
+class _TursoRow:
+    """A row that supports row[0] AND row["email"], like sqlite3.Row."""
+
+    def __init__(self, columns, values):
+        self._columns = list(columns)
+        self._values = tuple(values)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            return self._values[self._columns.index(key)]
+        return self._values[key]
+
+    def __len__(self):
+        return len(self._values)
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def keys(self):
+        return list(self._columns)
+
+
+class _TursoCursor:
+    """Cursor wrapper whose fetch methods return _TursoRow objects."""
+
+    def __init__(self, cursor):
+        self._cursor = cursor
+        description = cursor.description or ()
+        self._columns = [col[0] for col in description]
+
+    @property
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
+    def fetchone(self):
+        row = self._cursor.fetchone()
+        if row is None:
+            return None
+        return _TursoRow(self._columns, row)
+
+    def fetchall(self):
+        return [_TursoRow(self._columns, row)
+                for row in self._cursor.fetchall()]
+
+
+class _TursoConnection:
+    """sqlite3-shaped wrapper around a libsql (Turso) connection."""
+
+    def __init__(self, url, auth_token):
+        import libsql  # only needed in Turso mode; see requirements.txt
+
+        self._conn = libsql.connect(url, auth_token=auth_token)
+
+    def execute(self, sql, params=()):
+        return _TursoCursor(self._conn.execute(sql, tuple(params)))
+
+    def executemany(self, sql, seq_of_params):
+        return _TursoCursor(
+            self._conn.executemany(sql, [tuple(p) for p in seq_of_params])
+        )
+
+    def executescript(self, script):
+        return self._conn.executescript(script)
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        self._conn.close()
+
+
+def _connect():
+    """Open a connection to the shared database (Turso or local file)."""
+    if USE_TURSO:
+        return _TursoConnection(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN)
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_db():
+    """Open a connection whose rows can be read by column name."""
+    conn = _connect()
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
@@ -179,7 +280,7 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 
 
 def init_db():
-    conn = sqlite3.connect(DATABASE)
+    conn = _connect()
     try:
         conn.execute("PRAGMA foreign_keys = ON")
         conn.executescript(SCHEMA)
@@ -193,7 +294,12 @@ init_db()
 
 
 def _seed_demo_data_if_empty():
-    """On Vercel the database starts empty: fill the demo data once.
+    """Fill the demo data once, if the users table is still empty.
+
+    Runs when the database can start out empty (on Vercel, or when the
+    shared Turso database is used). The check is a plain COUNT(*) and
+    every insert in seed.py is INSERT OR IGNORE, so this service and
+    the Express app can never duplicate or crash each other's seeding.
 
     The demo data itself lives in ../seed.py. That file uses two small
     helpers from the old all-Python app's models module
@@ -211,10 +317,9 @@ def _seed_demo_data_if_empty():
     import types
 
     def raw_connection():
-        # seed.py reads rows by column name (row["id"]), like get_db()
-        conn = sqlite3.connect(DATABASE)
-        conn.row_factory = sqlite3.Row
-        return conn
+        # seed.py reads rows by column name (row["id"]), like get_db();
+        # _connect() gives it the Turso adapter or sqlite3 accordingly
+        return _connect()
 
     models_shim = types.ModuleType("models")
     models_shim.get_raw_connection = raw_connection
@@ -233,7 +338,7 @@ def _seed_demo_data_if_empty():
               "Run 'node seed.js' in the main app folder instead.")
 
 
-if os.environ.get("VERCEL"):
+if os.environ.get("VERCEL") or USE_TURSO:
     _seed_demo_data_if_empty()
 
 
