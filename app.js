@@ -65,22 +65,19 @@ models.initDb();
 fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
 
 // On Vercel - and whenever the shared Turso database is used - the
-// database can start out empty, so fill the demo data on boot whenever
-// the users table is empty (same idea as the auth service's seeding).
-// seedDemoData() only uses INSERT OR IGNORE, and a failure here is
-// logged instead of crashing the boot, so the two services can never
-// break each other even if they seed at the same moment.
+// database can start out PARTLY empty: the two services boot
+// independently, and the Python auth service may have seeded the demo
+// users already while jobs, announcements and the other demo content
+// are still missing. So on boot, fill ONLY the demo sections whose
+// table is completely empty (see seedMissingSections() in seed.js) -
+// a table that already holds real data is never touched. A failure
+// here is logged instead of crashing the boot, so the two services
+// can never break each other even if they seed at the same moment.
 if (config.ON_VERCEL || config.TURSO_DATABASE_URL) {
-  const userCount = models
-    .openDb()
-    .prepare("SELECT COUNT(*) AS c FROM users")
-    .get().c;
-  if (userCount === 0) {
-    try {
-      require("./seed").seedDemoData();
-    } catch (err) {
-      console.error("WARNING: demo auto-seed failed:", err.message);
-    }
+  try {
+    require("./seed").seedMissingSections();
+  } catch (err) {
+    console.error("WARNING: demo auto-seed failed:", err.message);
   }
 }
 
