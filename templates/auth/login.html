@@ -30,15 +30,43 @@
                 </p>
 
                 <hr>
-                <p class="small text-muted mb-1"><strong>Demo accounts:</strong></p>
-                <p class="small text-muted mb-0">
-                    Student: student@demo.com / student123<br>
-                    Alumni: alumni@demo.com / alumni123<br>
-                    Faculty: faculty@demo.com / faculty123<br>
-                    Admin: admin@alumnihub.com / admin123
+                <p class="small text-muted mb-2">
+                    <strong>Demo accounts</strong> — kisi par bhi click karo,
+                    email-password apne aap bhar jayega:
                 </p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm demo-fill"
+                            data-email="student@demo.com" data-password="student123">
+                        <i class="fas fa-user-graduate me-1"></i> Student — student@demo.com
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm demo-fill"
+                            data-email="alumni@demo.com" data-password="alumni123">
+                        <i class="fas fa-briefcase me-1"></i> Alumni — alumni@demo.com
+                    </button>
+                    <button type="button" class="btn btn-outline-dark btn-sm demo-fill"
+                            data-email="faculty@demo.com" data-password="faculty123">
+                        <i class="fas fa-chalkboard-teacher me-1"></i> Faculty — faculty@demo.com
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm demo-fill"
+                            data-email="admin@alumnihub.com" data-password="admin123">
+                        <i class="fas fa-user-shield me-1"></i> Admin — admin@alumnihub.com
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Demo account buttons: clicking one fills the email and password
+    // fields automatically, so the demo can be tried without typing.
+    document.querySelectorAll('.demo-fill').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelector('input[name="email"]').value = btn.dataset.email;
+            document.querySelector('input[name="password"]').value = btn.dataset.password;
+        });
+    });
+</script>
 {% endblock %}
