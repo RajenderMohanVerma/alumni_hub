@@ -1,6 +1,6 @@
 # Task / Feature Checklist — Alumni Hub
 
-Module-wise list of everything that was planned and built for the minor
+Module-wise list of everything that was planned and built for this
 project. Status: ✅ Done · 🔄 Partial · ⬜ Not planned (future scope)
 
 | # | Module | Task / Feature | Status |

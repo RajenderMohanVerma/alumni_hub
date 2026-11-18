@@ -1,4 +1,4 @@
-# Project Memory — Alumni Hub (Minor Project)
+# Project Memory — Alumni Hub
 
 The "why" behind the project: key decisions, history, credentials and
 limitations. Read this before making changes.
@@ -7,11 +7,11 @@ limitations. Read this before making changes.
 
 | Decision | Why |
 |----------|-----|
-| **Flask (not Django / Node)** | Smallest learning curve; routing, templating and forms in one file-set; perfect size for a minor project that must be explained in a viva. |
+| **Flask (not Django / Node)** | Smallest learning curve; routing, templating and forms in one file-set; perfect size for a project that must be explained in a viva. |
 | **Raw `sqlite3` (no SQLAlchemy ORM)** | Real SQL is visible in the code — easy to demonstrate and answer questions on. SQLite needs zero installation and the whole DB is one file. |
 | **Server-rendered Jinja2 templates (no React/API)** | Keeps the project a true monolith: one app to run, one place to debug. |
 | **No OTP / email verification** | Needs an SMTP/app-password setup and adds failure modes in a demo. Registration is direct; the admin can block/delete misuse. Deliberately out of scope. |
-| **No WebSockets for chat** | Chat is a simple form POST + page load (with read/unread tracking). Real-time sockets would need Socket.IO + a different hosting model and are hard to justify at minor-project level. |
+| **No WebSockets for chat** | Chat is a simple form POST + page load (with read/unread tracking). Real-time sockets would need Socket.IO + a different hosting model and are hard to justify at this project's level. |
 | **One `app.py` for all routes** | Grouped, commented sections (AUTH / JOBS / CHAT / ADMIN…) make the whole flow readable top-to-bottom. `models.py` holds only DB code, `config.py` only settings. |
 | **Separate profile table per role** | Students, alumni and faculty genuinely have different fields; three small tables are clearer than one wide table full of NULLs. |
 | **Admin is seed-only** | Admins are never created from the public register form — `seed.py` creates the single admin account. |
@@ -23,8 +23,8 @@ limitations. Read this before making changes.
 1. **Origin** — A large, production-style *Alumni Hub* already existed
    (~160 endpoints, OTP login, ML recommendations, Socket.IO chat, Turso
    cloud DB — repo `RajenderMohanVerma/alumni-hub`). It was far too big to
-   submit or defend as an MCA **minor** project.
-2. **Minor version built fresh** — This project was written from scratch as a
+   submit or defend as a college project.
+2. **Smaller version built fresh** — This project was written from scratch as a
    separate, simplified codebase: Flask + raw `sqlite3` + Bootstrap,
    ~3,700 lines, 28 templates, 10 tables, only the core features
    (auth, profiles, directory, connections, chat, jobs, announcements,

@@ -8,7 +8,7 @@ find and connect with alumni, chat with them and apply for jobs that alumni
 post. Faculty members post announcements for the whole community, and an
 **Admin** manages users, jobs and contact messages.
 
-It is the *minor project* version of a larger Alumni Hub concept: the scope is
+It is a simplified version of a larger Alumni Hub concept: the scope is
 deliberately small, the code is a single well-commented Flask application, and
 every feature can be explained easily in a viva.
 

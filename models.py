@@ -1,5 +1,5 @@
 """
-models.py - Database layer for Alumni Hub (Minor Project)
+models.py - Database layer for Alumni Hub
 
 This file contains everything related to the SQLite database:
   1. How to connect to the database  -> get_db()

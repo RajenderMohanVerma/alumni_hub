@@ -118,7 +118,7 @@ alumni-hub-minor/
 
 | Part | Technology | Why |
 |------|-----------|-----|
-| Language | Python 3 | Simple, readable — ideal for a minor project |
+| Language | Python 3 | Simple, readable — ideal for a project of this size |
 | Web framework | Flask | Lightweight; routing + templating in one place |
 | Login/session | Flask-Login | Standard, safe session handling |
 | Password security | Werkzeug `generate_password_hash` / `check_password_hash` | Passwords are never stored in plain text |

@@ -1,5 +1,5 @@
 """
-app.py - Main application file of Alumni Hub (Minor Project)
+app.py - Main application file of Alumni Hub
 
 Alumni Hub connects Students, Alumni and Faculty of a college on one
 platform: they can build profiles, connect with each other, chat, share

@@ -1,7 +1,7 @@
 # Alumni Hub — Project Documentation
 
 This folder contains the complete documentation of the **Alumni Hub**
-MCA Minor Project. Each file covers one topic:
+project. Each file covers one topic:
 
 | File | What it covers |
 |------|----------------|

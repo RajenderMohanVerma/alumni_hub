@@ -1,5 +1,5 @@
 """
-config.py - Project settings for Alumni Hub (Minor Project)
+config.py - Project settings for Alumni Hub
 
 All the basic configuration of the app lives in this one file so it is
 easy to find and change. app.py and models.py import values from here.

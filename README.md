@@ -2,7 +2,7 @@
 
 > A simple web application that connects the **Students**, **Alumni** and **Faculty** of a college on one platform — build profiles, connect, chat, share jobs and stay updated.
 
-Alumni Hub is an **MCA Minor Project** built with **Flask + SQLite + Bootstrap**.
+Alumni Hub is a web application built with **Flask + SQLite + Bootstrap**.
 The code is deliberately small, clean and well-commented, so every part is easy
 to understand, run and explain.
 
@@ -220,4 +220,4 @@ Complete documentation lives in the [`docs/`](docs/) folder:
 
 ---
 
-**Developed by Rajender Mohan Verma — MCA Minor Project**
+**Developed by Rajender Mohan Verma**

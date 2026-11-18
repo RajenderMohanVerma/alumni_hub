@@ -116,7 +116,7 @@ def main():
     # --- a small chat between Rahul and Neha ---
     chat = [
         (neha, rahul, "Hi Rahul! I saw your profile - you are learning Flask, great!"),
-        (rahul, neha, "Hello ma'am! Yes, I am building my minor project on Flask."),
+        (rahul, neha, "Hello ma'am! Yes, I am building my project on Flask."),
         (neha, rahul, "Nice. Feel free to ask me if you get stuck anywhere."),
     ]
     existing = conn.execute("SELECT COUNT(*) c FROM messages").fetchone()["c"]

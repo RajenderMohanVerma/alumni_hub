@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Alumni Hub (Minor Project) - main.js
+   Alumni Hub - main.js
    Small jobs:
      1. Show flash messages as Bootstrap toasts (auto-hide after 4 seconds)
      2. Ask "Are you sure?" before delete / block actions
