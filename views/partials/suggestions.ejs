@@ -2,26 +2,57 @@
      People most similar to the logged-in user, computed by
      recommend.js: same domain, shared skills/interests, close batch.
      Every card shows the match % and the top reasons, so the
-     suggestion is never a mystery. -->
+     suggestion is never a mystery.
+     Redesigned with the dashboards pass: Members-style cards with a
+     context line (from the suggestion's profile row), a gradient
+     match pill + meter, and an in-place Connect (the form carries
+     .js-connect-form, so main.js sends it by fetch and swaps in the
+     data-sent-html "Request Sent" button - no page reload). -->
 <section class="mb-4">
   <h4 class="section-title"><i class="bi bi-stars text-primary"></i> Suggested for You</h4>
   <% if (suggestions && suggestions.length) { %>
   <div class="row g-3">
-    <% suggestions.forEach(function(s) { %>
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 shadow-sm member-card">
-        <div class="card-body">
+    <% suggestions.forEach(function(s, idx) { %>
+    <%
+      // One context line per role, built from the profile row the
+      // recommender already loaded (same fields as the Members page):
+      // student -> course · branch, alumni -> designation · company,
+      // faculty -> designation · department.
+      var contextParts = [];
+      var sp = s.profile || {};
+      if (s.user.role === 'student') {
+        if (sp.course) contextParts.push(sp.course);
+        if (sp.branch) contextParts.push(sp.branch);
+      } else if (s.user.role === 'alumni') {
+        if (sp.designation) contextParts.push(sp.designation);
+        if (sp.company) contextParts.push(sp.company);
+      } else if (s.user.role === 'faculty') {
+        if (sp.designation) contextParts.push(sp.designation);
+        if (sp.department) contextParts.push(sp.department);
+      }
+    %>
+    <div class="col-md-6 col-lg-4 dash-anim" style="--i:<%= idx % 6 %>">
+      <div class="card h-100 dash-sugg-card">
+        <div class="card-body d-flex flex-column">
           <div class="d-flex align-items-center gap-3 mb-2">
-            <img src="<%= avatarUrl(s.user) %>" alt="avatar" class="member-avatar">
-            <div>
-              <h5 class="card-title mb-0">
+            <img src="<%= avatarUrl(s.user) %>" alt="avatar" class="dash-avatar">
+            <div class="dash-sugg-id">
+              <h5 class="dash-sugg-name mb-1">
                 <a href="/profile/<%= s.user.id %>" class="text-decoration-none"><%= s.user.name %></a>
               </h5>
-              <span class="badge bg-<%= s.user.role === 'student' ? 'primary' : (s.user.role === 'alumni' ? 'success' : 'warning text-dark') %>"><%= capitalize(s.user.role) %></span>
-              <span class="badge bg-primary-subtle text-primary-emphasis">
-                <i class="bi bi-stars"></i> <%= s.matchPercent %>% match
-              </span>
+              <span class="badge badge-role-<%= s.user.role %>"><%= capitalize(s.user.role) %></span>
             </div>
+            <span class="dash-match-pill ms-auto">
+              <i class="bi bi-stars"></i> <%= s.matchPercent %>% match
+            </span>
+          </div>
+          <% if (contextParts.length) { %>
+          <p class="dash-context mb-2">
+            <i class="bi bi-briefcase"></i> <%= contextParts.join(' · ') %>
+          </p>
+          <% } %>
+          <div class="dash-matchbar" role="img" aria-label="<%= s.matchPercent %>% match">
+            <span style="width: <%= s.matchPercent %>%"></span>
           </div>
           <% if (s.reasons.length) { %>
           <div class="mb-3">
@@ -30,7 +61,9 @@
             <% }) %>
           </div>
           <% } %>
-          <form method="post" action="/connect/<%= s.user.id %>">
+          <form method="post" action="/connect/<%= s.user.id %>"
+                class="js-connect-form mt-auto" data-name="<%= s.user.name %>"
+                data-sent-html='<button type="button" class="btn btn-secondary btn-sm w-100" disabled><i class="bi bi-check-lg"></i> Request Sent</button>'>
             <button class="btn btn-primary btn-sm w-100" type="submit">
               <i class="bi bi-person-plus"></i> Connect
             </button>

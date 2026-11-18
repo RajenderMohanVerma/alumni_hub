@@ -1,83 +1,132 @@
 <%- include('../partials/header', { title: 'Admin Dashboard' }) %>
 
-<h2 class="fw-bold mb-4"><i class="bi bi-shield-lock"></i> Admin Dashboard</h2>
+<div class="dash-page dash-accent-admin">
 
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-blue">
-      <div class="stat-icon"><i class="bi bi-people"></i></div>
-      <div><div class="stat-number"><%= counts.total_users %></div>
-      <div>Total Users</div></div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-green">
-      <div class="stat-icon"><i class="bi bi-briefcase"></i></div>
-      <div><div class="stat-number"><%= counts.jobs %></div>
-      <div>Jobs</div></div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-orange">
-      <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
-      <div><div class="stat-number"><%= counts.applications %></div>
-      <div>Applications</div></div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-purple">
-      <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
-      <div><div class="stat-number"><%= counts.announcements %></div>
-      <div>Announcements</div></div>
-    </div>
-  </div>
-</div>
-
-<div class="row g-3">
-  <!-- Chart: users by role -->
-  <div class="col-lg-7">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="fw-semibold mb-3"><i class="bi bi-bar-chart"></i> Users by Role</h5>
-        <canvas id="roleChart" height="220"></canvas>
-      </div>
-    </div>
-  </div>
-  <!-- Quick links -->
-  <div class="col-lg-5">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="fw-semibold mb-3"><i class="bi bi-lightning"></i> Quick Actions</h5>
-        <div class="d-grid gap-2">
-          <a href="/admin/users" class="btn btn-outline-primary text-start">
-            <i class="bi bi-people"></i> Manage Users
-            <span class="badge bg-primary float-end"><%= counts.total_users %></span>
-          </a>
-          <a href="/admin/jobs" class="btn btn-outline-success text-start">
-            <i class="bi bi-briefcase"></i> Manage Jobs
-            <span class="badge bg-success float-end"><%= counts.jobs %></span>
-          </a>
-          <a href="/admin/messages" class="btn btn-outline-info text-start">
-            <i class="bi bi-envelope"></i> Contact Messages
-            <span class="badge bg-info float-end"><%= counts.contact_messages %></span>
-          </a>
-          <a href="/search" class="btn btn-outline-secondary text-start">
-            <i class="bi bi-search"></i> Member Directory
-          </a>
-          <a href="/announcements" class="btn btn-outline-warning text-start">
-            <i class="bi bi-megaphone"></i> Announcements
-            <span class="badge bg-warning text-dark float-end"><%= counts.announcements %></span>
-          </a>
-        </div>
-        <hr>
-        <p class="text-muted small mb-0">
-          Students: <strong><%= counts.students %></strong> ·
-          Alumni: <strong><%= counts.alumni %></strong> ·
-          Faculty: <strong><%= counts.faculty %></strong>
+  <!-- ================= WELCOME BAND ================= -->
+  <section class="dash-welcome dash-welcome-admin dash-anim" style="--i:0">
+    <div class="dash-welcome-main">
+      <img src="<%= avatarUrl(currentUser) %>" alt="avatar" class="dash-welcome-avatar">
+      <div class="dash-welcome-text">
+        <p class="dash-welcome-date">
+          <i class="bi bi-calendar3"></i> <%= new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %>
         </p>
+        <h2 class="dash-welcome-title">Hello, <%= currentUser.name %> <i class="bi bi-shield-lock"></i></h2>
+        <p class="dash-welcome-sub">Admin Dashboard · Platform overview</p>
+      </div>
+    </div>
+    <div class="dash-welcome-actions">
+      <a href="/admin/users" class="btn dash-btn-light">
+        <i class="bi bi-people"></i> Manage Users
+      </a>
+      <a href="/admin/jobs" class="btn dash-btn-ghost">
+        <i class="bi bi-briefcase"></i> Manage Jobs
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3 dash-anim" style="--i:1">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-blue"><i class="bi bi-people"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= counts.total_users %>"><%= counts.total_users %></span></div>
+        <div class="dash-stat-label">Total Users</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3 dash-anim" style="--i:2">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-green"><i class="bi bi-briefcase"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= counts.jobs %>"><%= counts.jobs %></span></div>
+        <div class="dash-stat-label">Jobs</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3 dash-anim" style="--i:3">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-orange"><i class="bi bi-file-earmark-text"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= counts.applications %>"><%= counts.applications %></span></div>
+        <div class="dash-stat-label">Applications</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3 dash-anim" style="--i:4">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-purple"><i class="bi bi-megaphone"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= counts.announcements %>"><%= counts.announcements %></span></div>
+        <div class="dash-stat-label">Announcements</div></div>
       </div>
     </div>
   </div>
+
+  <div class="row g-3">
+    <!-- Chart: users by role -->
+    <div class="col-lg-7 dash-anim" style="--i:2">
+      <div class="card dash-panel h-100">
+        <div class="card-body">
+          <div class="dash-panel-head">
+            <span class="dash-panel-icon dash-panel-icon-indigo"><i class="bi bi-bar-chart"></i></span>
+            <div>
+              <h5 class="fw-semibold mb-0">Users by Role</h5>
+              <small class="text-muted">How the platform's members are distributed</small>
+            </div>
+          </div>
+          <div class="dash-chart-wrap">
+            <canvas id="roleChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Quick links -->
+    <div class="col-lg-5 dash-anim" style="--i:3">
+      <div class="card dash-panel h-100">
+        <div class="card-body">
+          <div class="dash-panel-head">
+            <span class="dash-panel-icon dash-panel-icon-amber"><i class="bi bi-lightning"></i></span>
+            <div>
+              <h5 class="fw-semibold mb-0">Quick Actions</h5>
+              <small class="text-muted">Jump straight to a management area</small>
+            </div>
+          </div>
+          <div class="dash-quick-list">
+            <a href="/admin/users" class="dash-quick-row">
+              <span class="dash-quick-icon dash-quick-blue"><i class="bi bi-people"></i></span>
+              <span class="dash-quick-label">Manage Users</span>
+              <span class="badge dash-quick-count"><%= counts.total_users %></span>
+              <i class="bi bi-chevron-right dash-quick-arrow"></i>
+            </a>
+            <a href="/admin/jobs" class="dash-quick-row">
+              <span class="dash-quick-icon dash-quick-green"><i class="bi bi-briefcase"></i></span>
+              <span class="dash-quick-label">Manage Jobs</span>
+              <span class="badge dash-quick-count"><%= counts.jobs %></span>
+              <i class="bi bi-chevron-right dash-quick-arrow"></i>
+            </a>
+            <a href="/admin/messages" class="dash-quick-row">
+              <span class="dash-quick-icon dash-quick-sky"><i class="bi bi-envelope"></i></span>
+              <span class="dash-quick-label">Contact Messages</span>
+              <span class="badge dash-quick-count"><%= counts.contact_messages %></span>
+              <i class="bi bi-chevron-right dash-quick-arrow"></i>
+            </a>
+            <a href="/search" class="dash-quick-row">
+              <span class="dash-quick-icon dash-quick-slate"><i class="bi bi-search"></i></span>
+              <span class="dash-quick-label">Member Directory</span>
+              <i class="bi bi-chevron-right dash-quick-arrow"></i>
+            </a>
+            <a href="/announcements" class="dash-quick-row">
+              <span class="dash-quick-icon dash-quick-orange"><i class="bi bi-megaphone"></i></span>
+              <span class="dash-quick-label">Announcements</span>
+              <span class="badge dash-quick-count"><%= counts.announcements %></span>
+              <i class="bi bi-chevron-right dash-quick-arrow"></i>
+            </a>
+          </div>
+          <hr>
+          <p class="text-muted small mb-0">
+            Students: <strong><%= counts.students %></strong> ·
+            Alumni: <strong><%= counts.alumni %></strong> ·
+            Faculty: <strong><%= counts.faculty %></strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Chart.js (CDN) + the bar chart for users by role -->

@@ -3143,3 +3143,549 @@ body { overflow-x: clip; }
     #cardGrid .filter-item.reveal { transition-delay: 0ms; }
     .mem-toast-box .toast { animation: none; }
 }
+
+/* ==========================================================================
+   DASHBOARDS
+   One design system for all four dashboards (Student / Alumni /
+   Faculty / Admin): a role-tinted welcome band, white stat cards with
+   gradient icon tiles and count-up numbers, Members-style suggestion
+   and job cards, an animated completeness meter, quick-action rows,
+   and the admin panel (chart card + quick-access list).
+   The role accent lives in CSS variables set by .dash-accent-<role>
+   on the page wrapper; every component below reads them.
+   All dashboard classes are prefixed .dash- so no other page changes.
+   ========================================================================== */
+
+/* ---------- Role accents ---------- */
+.dash-accent-student { --dash-accent: #0ea5e9; --dash-accent-dark: #0369a1; --dash-accent-2: #38bdf8; --dash-accent-soft: #e0f2fe; }
+.dash-accent-alumni  { --dash-accent: #d97706; --dash-accent-dark: #92400e; --dash-accent-2: #f59e0b; --dash-accent-soft: #fef3c7; }
+.dash-accent-faculty { --dash-accent: #059669; --dash-accent-dark: #065f46; --dash-accent-2: #34d399; --dash-accent-soft: #d1fae5; }
+.dash-accent-admin   { --dash-accent: #4f46e5; --dash-accent-dark: #3730a3; --dash-accent-2: #818cf8; --dash-accent-soft: #e0e7ff; }
+
+/* ---------- Entrance animation (staggered via --i) ---------- */
+@keyframes dashFadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.dash-anim {
+    animation: dashFadeUp 0.55s ease both;
+    animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+/* Section headings inside a dashboard take the role accent underline */
+.dash-page .section-title::after {
+    background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-2));
+}
+
+/* ---------- Welcome band ---------- */
+.dash-welcome {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 1.6rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+}
+
+.dash-welcome-student { background: linear-gradient(120deg, #0369a1, #0ea5e9 55%, #38bdf8); }
+.dash-welcome-alumni  { background: linear-gradient(120deg, #92400e, #d97706 55%, #f59e0b); }
+.dash-welcome-faculty { background: linear-gradient(120deg, #065f46, #059669 55%, #34d399); }
+.dash-welcome-admin   { background: linear-gradient(120deg, #3730a3, #4f46e5 55%, #818cf8); }
+
+/* soft decorative circles, like the home hero's blobs */
+.dash-welcome::before,
+.dash-welcome::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    pointer-events: none;
+}
+
+.dash-welcome::before { width: 240px; height: 240px; right: -70px; top: -110px; }
+.dash-welcome::after  { width: 150px; height: 150px; right: 150px; bottom: -80px; }
+
+.dash-welcome-main {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.dash-welcome-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+    flex-shrink: 0;
+}
+
+.dash-welcome-text { min-width: 0; }
+
+.dash-welcome-date {
+    margin: 0 0 0.15rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.dash-welcome-title {
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.dash-welcome-sub {
+    margin: 0.2rem 0 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.95rem;
+}
+
+.dash-welcome-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.dash-btn-light {
+    background: #ffffff;
+    border: 1.5px solid #ffffff;
+    color: #1e293b;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+}
+
+.dash-btn-light:hover {
+    background: #f1f5f9;
+    border-color: #f1f5f9;
+    color: #0f172a;
+}
+
+.dash-btn-ghost {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+}
+
+.dash-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+/* ---------- Stat cards ---------- */
+.dash-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #ffffff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    padding: 1.15rem 1.25rem;
+    height: 100%;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.dash-stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.13);
+}
+
+.dash-stat-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.16);
+}
+
+.dash-stat-blue   { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+.dash-stat-green  { background: linear-gradient(135deg, #059669, #34d399); }
+.dash-stat-orange { background: linear-gradient(135deg, #ea580c, #fbbf24); }
+.dash-stat-purple { background: linear-gradient(135deg, #7c3aed, #c084fc); }
+
+.dash-stat-num {
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #0f172a;
+}
+
+.dash-stat-label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* ---------- Suggestion + job cards (Members card language) ---------- */
+.dash-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 2px #dbeafe, 0 4px 10px rgba(15, 23, 42, 0.12);
+    flex-shrink: 0;
+}
+
+.dash-sugg-card,
+.dash-job-card {
+    border: 1px solid #e8edf3;
+    border-radius: 1rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.dash-sugg-card:hover,
+.dash-job-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.13);
+}
+
+.dash-sugg-id { min-width: 0; }
+
+.dash-sugg-name {
+    font-size: 1.03rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.dash-sugg-name a { color: #0f172a; }
+.dash-sugg-name a:hover { color: var(--dash-accent); }
+
+.dash-context {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.dash-context i { color: var(--dash-accent); }
+
+.dash-match-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: linear-gradient(120deg, var(--dash-accent-dark), var(--dash-accent) 60%, var(--dash-accent-2));
+    color: #ffffff;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+}
+
+.dash-matchbar {
+    height: 6px;
+    background: #eef2f7;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+}
+
+.dash-matchbar > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-2));
+    animation: dashBarGrow 1s ease 0.25s both;
+}
+
+@keyframes dashBarGrow {
+    from { width: 0; }
+}
+
+.dash-job-tile {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.16);
+}
+
+.dash-job-tile-0 { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+.dash-job-tile-1 { background: linear-gradient(135deg, #059669, #34d399); }
+.dash-job-tile-2 { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.dash-job-tile-3 { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.dash-job-tile-4 { background: linear-gradient(135deg, #db2777, #f472b6); }
+.dash-job-tile-5 { background: linear-gradient(135deg, #0d9488, #2dd4bf); }
+
+.dash-job-title { font-size: 1.02rem; font-weight: 700; color: #0f172a; }
+
+.dash-job-footer {
+    background: #ffffff;
+    border-top: 1px solid #eef2f7;
+}
+
+/* ---------- Profile completeness meter ---------- */
+.dash-meter {
+    border: 1px solid #e8edf3;
+    border-radius: 1rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.dash-meter-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    color: #ffffff;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--dash-accent), var(--dash-accent-2));
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.16);
+}
+
+.dash-meter-pct {
+    background: var(--dash-accent-soft);
+    color: var(--dash-accent-dark);
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+}
+
+.dash-meter-track {
+    height: 10px;
+    background: #eef2f7;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.dash-meter-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-2));
+    animation: dashBarGrow 1.1s ease 0.2s both;
+}
+
+/* ---------- Quick-action rows (role dashboards) ---------- */
+.dash-action {
+    display: flex;
+    align-items: center;
+    gap: 0.95rem;
+    height: 100%;
+    background: #ffffff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    padding: 1.05rem 1.15rem;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.dash-action:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.13);
+    border-color: var(--dash-accent-2);
+}
+
+.dash-action-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+}
+
+.dash-action-blue   { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+.dash-action-green  { background: linear-gradient(135deg, #059669, #34d399); }
+.dash-action-orange { background: linear-gradient(135deg, #ea580c, #fbbf24); }
+.dash-action-sky    { background: linear-gradient(135deg, #0284c7, #38bdf8); }
+.dash-action-red    { background: linear-gradient(135deg, #dc2626, #f87171); }
+.dash-action-slate  { background: linear-gradient(135deg, #475569, #94a3b8); }
+
+.dash-action-text { min-width: 0; }
+
+.dash-action-title {
+    display: block;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 1rem;
+}
+
+.dash-action-desc {
+    display: block;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 0.1rem;
+}
+
+.dash-action-arrow {
+    margin-left: auto;
+    color: #cbd5e1;
+    transition: transform 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.dash-action:hover .dash-action-arrow {
+    color: var(--dash-accent);
+    transform: translateX(3px);
+}
+
+/* ---------- Admin panels: chart card + quick-access list ---------- */
+.dash-panel {
+    border: 1px solid #e8edf3;
+    border-radius: 1rem;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.dash-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.1rem;
+}
+
+.dash-panel-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    color: #ffffff;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+}
+
+.dash-panel-icon-indigo { background: linear-gradient(135deg, #4f46e5, #818cf8); }
+.dash-panel-icon-amber  { background: linear-gradient(135deg, #d97706, #f59e0b); }
+
+.dash-chart-wrap { position: relative; }
+
+.dash-quick-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.dash-quick-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid #eef2f7;
+    border-radius: 13px;
+    text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.dash-quick-row:hover {
+    background: #f8fafc;
+    border-color: var(--dash-accent-2);
+    transform: translateX(2px);
+}
+
+.dash-quick-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.dash-quick-blue   { background: linear-gradient(135deg, #2563eb, #38bdf8); }
+.dash-quick-green  { background: linear-gradient(135deg, #059669, #34d399); }
+.dash-quick-sky    { background: linear-gradient(135deg, #0284c7, #38bdf8); }
+.dash-quick-slate  { background: linear-gradient(135deg, #475569, #94a3b8); }
+.dash-quick-orange { background: linear-gradient(135deg, #ea580c, #fbbf24); }
+
+.dash-quick-label {
+    font-weight: 600;
+    color: #1e293b;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.dash-quick-count {
+    background: var(--dash-accent-soft);
+    color: var(--dash-accent-dark);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.32rem 0.6rem;
+    border-radius: 999px;
+}
+
+.dash-quick-arrow { color: #cbd5e1; flex-shrink: 0; }
+.dash-quick-row:hover .dash-quick-arrow { color: var(--dash-accent); }
+
+/* ---------- Dashboards on small screens ---------- */
+@media (max-width: 767.98px) {
+    .dash-welcome { padding: 1.25rem 1.15rem; border-radius: 16px; }
+    .dash-welcome-avatar { width: 60px; height: 60px; }
+    .dash-welcome-title { font-size: 1.32rem; }
+    .dash-welcome-sub { font-size: 0.88rem; }
+    .dash-welcome-actions { width: 100%; }
+    .dash-welcome-actions .btn { flex: 1 1 auto; text-align: center; }
+}
+
+@media (max-width: 575.98px) {
+    .dash-stat { padding: 0.9rem; gap: 0.7rem; }
+    .dash-stat-icon { width: 44px; height: 44px; font-size: 1.2rem; border-radius: 12px; }
+    .dash-stat-num { font-size: 1.3rem; }
+    .dash-stat-label { font-size: 0.76rem; }
+    /* suggestion header: let the match pill wrap under the name
+       instead of squeezing it off the card */
+    .dash-sugg-card .card-body > .d-flex { flex-wrap: wrap; }
+    .dash-action { padding: 0.95rem; }
+}
+
+/* ---------- Dashboards: reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .dash-anim { animation: none; }
+    .dash-matchbar > span, .dash-meter-bar { animation: none; }
+    .dash-stat, .dash-sugg-card, .dash-job-card, .dash-action, .dash-quick-row {
+        transition: none;
+    }
+    .dash-stat:hover, .dash-sugg-card:hover, .dash-job-card:hover,
+    .dash-action:hover, .dash-quick-row:hover { transform: none; }
+}

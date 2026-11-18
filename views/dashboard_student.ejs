@@ -1,134 +1,186 @@
 <%- include('partials/header', { title: 'Student Dashboard' }) %>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-  <div>
-    <h2 class="fw-bold mb-0">Hello, <%= currentUser.name %> <i class="bi bi-mortarboard text-primary"></i></h2>
-    <p class="text-muted mb-0">
-      Student Dashboard
-      <% if (profile && profile.course) { %> · <%= profile.course %><% if (profile.branch) { %> (<%= profile.branch %>)<% } %><% } %>
-    </p>
-  </div>
-  <a href="/profile/edit" class="btn btn-outline-primary">
-    <i class="bi bi-pencil-square"></i> Edit Profile
-  </a>
-</div>
+<div class="dash-page dash-accent-student">
 
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-blue">
-      <div class="stat-icon"><i class="bi bi-people"></i></div>
-      <div><div class="stat-number"><%= stats.connections %></div>
-      <div>My Connections</div></div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-green">
-      <div class="stat-icon"><i class="bi bi-briefcase"></i></div>
-      <div><div class="stat-number"><%= stats.jobs %></div>
-      <div>Jobs Available</div></div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-orange">
-      <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
-      <div><div class="stat-number"><%= stats.applications %></div>
-      <div>My Applications</div></div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="stat-card stat-purple">
-      <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
-      <div><div class="stat-number"><%= stats.announcements %></div>
-      <div>Announcements</div></div>
-    </div>
-  </div>
-</div>
-
-<%- include('partials/suggestions') %>
-
-<!-- ============ RECOMMENDED JOBS FOR YOU (KNN-matched) ============ -->
-<section class="mb-4">
-  <h4 class="section-title"><i class="bi bi-briefcase text-success"></i> Recommended Jobs for You</h4>
-  <% if (jobSuggestions && jobSuggestions.length) { %>
-  <div class="row g-3">
-    <% jobSuggestions.forEach(function(r) { %>
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 shadow-sm job-card">
-        <div class="card-body">
-          <h5 class="card-title fw-semibold"><%= r.job.title %></h5>
-          <p class="card-subtitle text-muted mb-2">
-            <i class="bi bi-building"></i> <%= r.job.company %>
-            <% if (r.job.location) { %> · <i class="bi bi-geo-alt"></i> <%= r.job.location %><% } %>
-          </p>
-          <p class="mb-2">
-            <span class="badge bg-success-subtle text-success-emphasis">
-              <i class="bi bi-stars"></i> <%= r.matchPercent %>% match
-            </span>
-          </p>
-          <p class="card-text text-muted small mb-0">
-            <i class="bi bi-check2-circle text-success"></i> <%= r.reason %>
-          </p>
-        </div>
-        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-          <span class="badge bg-light text-dark border">
-            <i class="bi bi-calendar-event"></i> <%= dateformat(r.job.deadline) %>
-          </span>
-          <a href="/jobs/<%= r.job.id %>" class="btn btn-primary btn-sm">View &amp; Apply</a>
-        </div>
+  <!-- ================= WELCOME BAND ================= -->
+  <section class="dash-welcome dash-welcome-student dash-anim" style="--i:0">
+    <div class="dash-welcome-main">
+      <img src="<%= avatarUrl(currentUser) %>" alt="avatar" class="dash-welcome-avatar">
+      <div class="dash-welcome-text">
+        <p class="dash-welcome-date">
+          <i class="bi bi-calendar3"></i> <%= new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %>
+        </p>
+        <h2 class="dash-welcome-title">Hello, <%= currentUser.name %> <i class="bi bi-mortarboard"></i></h2>
+        <p class="dash-welcome-sub">
+          Student Dashboard
+          <% if (profile && profile.course) { %> · <%= profile.course %><% if (profile.branch) { %> (<%= profile.branch %>)<% } %><% } %>
+        </p>
       </div>
     </div>
-    <% }) %>
-  </div>
-  <% } else { %>
-  <div class="card shadow-sm">
-    <div class="card-body text-muted">
-      No job matches yet — add your skills in
-      <a href="/profile/edit">Edit Profile</a> and browse the
-      <a href="/jobs">Job Board</a>.
+    <div class="dash-welcome-actions">
+      <a href="/search" class="btn dash-btn-light">
+        <i class="bi bi-search"></i> Find Members
+      </a>
+      <a href="/profile/edit" class="btn dash-btn-ghost">
+        <i class="bi bi-pencil-square"></i> Edit Profile
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3 dash-anim" style="--i:1">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-blue"><i class="bi bi-people"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= stats.connections %>"><%= stats.connections %></span></div>
+        <div class="dash-stat-label">My Connections</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3 dash-anim" style="--i:2">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-green"><i class="bi bi-briefcase"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= stats.jobs %>"><%= stats.jobs %></span></div>
+        <div class="dash-stat-label">Jobs Available</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3 dash-anim" style="--i:3">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-orange"><i class="bi bi-file-earmark-text"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= stats.applications %>"><%= stats.applications %></span></div>
+        <div class="dash-stat-label">My Applications</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3 dash-anim" style="--i:4">
+      <div class="dash-stat">
+        <div class="dash-stat-icon dash-stat-purple"><i class="bi bi-megaphone"></i></div>
+        <div><div class="dash-stat-num"><span class="counter" data-count="<%= stats.announcements %>"><%= stats.announcements %></span></div>
+        <div class="dash-stat-label">Announcements</div></div>
+      </div>
     </div>
   </div>
-  <% } %>
-</section>
 
-<%- include('partials/profile_meter') %>
+  <%- include('partials/suggestions') %>
 
-<div class="row g-3">
-  <div class="col-md-4"><a href="/search" class="text-decoration-none">
-    <div class="card action-card shadow-sm h-100"><div class="card-body">
-      <h5><i class="bi bi-search text-primary"></i> Find Members</h5>
-      <p class="text-muted mb-0">Search alumni and faculty, view profiles and connect.</p>
-    </div></div></a>
+  <!-- ============ RECOMMENDED JOBS FOR YOU (KNN-matched) ============ -->
+  <section class="mb-4">
+    <h4 class="section-title"><i class="bi bi-briefcase text-success"></i> Recommended Jobs for You</h4>
+    <% if (jobSuggestions && jobSuggestions.length) { %>
+    <div class="row g-3">
+      <% jobSuggestions.forEach(function(r, idx) { %>
+      <%
+        var _h = 0, _c = String(r.job.company || '');
+        for (var _i = 0; _i < _c.length; _i++) { _h = (_h * 31 + _c.charCodeAt(_i)) >>> 0; }
+        var tileClass = 'dash-job-tile-' + (_h % 6);
+      %>
+      <div class="col-md-6 col-lg-4 dash-anim" style="--i:<%= idx % 6 %>">
+        <div class="card h-100 dash-job-card">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <div class="dash-job-tile <%= tileClass %>"><%= (r.job.company || '?').charAt(0).toUpperCase() %></div>
+              <div>
+                <h5 class="dash-job-title mb-0"><%= r.job.title %></h5>
+                <p class="dash-context mb-0">
+                  <i class="bi bi-building"></i> <%= r.job.company %>
+                  <% if (r.job.location) { %> · <i class="bi bi-geo-alt"></i> <%= r.job.location %><% } %>
+                </p>
+              </div>
+            </div>
+            <p class="mb-2">
+              <span class="dash-match-pill">
+                <i class="bi bi-stars"></i> <%= r.matchPercent %>% match
+              </span>
+            </p>
+            <p class="text-muted small mb-0">
+              <i class="bi bi-check2-circle text-success"></i> <%= r.reason %>
+            </p>
+          </div>
+          <div class="card-footer dash-job-footer d-flex justify-content-between align-items-center">
+            <span class="badge bg-light text-dark border">
+              <i class="bi bi-calendar-event"></i> <%= dateformat(r.job.deadline) %>
+            </span>
+            <a href="/jobs/<%= r.job.id %>" class="btn btn-primary btn-sm">View &amp; Apply</a>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <div class="card shadow-sm">
+      <div class="card-body text-muted">
+        No job matches yet — add your skills in
+        <a href="/profile/edit">Edit Profile</a> and browse the
+        <a href="/jobs">Job Board</a>.
+      </div>
+    </div>
+    <% } %>
+  </section>
+
+  <%- include('partials/profile_meter') %>
+
+  <!-- ================= QUICK ACTIONS ================= -->
+  <div class="row g-3">
+    <div class="col-md-4 dash-anim" style="--i:0">
+      <a href="/search" class="dash-action">
+        <span class="dash-action-icon dash-action-blue"><i class="bi bi-search"></i></span>
+        <span class="dash-action-text">
+          <span class="dash-action-title">Find Members</span>
+          <span class="dash-action-desc">Search alumni and faculty, view profiles and connect.</span>
+        </span>
+        <i class="bi bi-chevron-right dash-action-arrow"></i>
+      </a>
+    </div>
+    <div class="col-md-4 dash-anim" style="--i:1">
+      <a href="/jobs" class="dash-action">
+        <span class="dash-action-icon dash-action-green"><i class="bi bi-briefcase"></i></span>
+        <span class="dash-action-text">
+          <span class="dash-action-title">Browse Jobs</span>
+          <span class="dash-action-desc">See jobs posted by alumni and apply in one click.</span>
+        </span>
+        <i class="bi bi-chevron-right dash-action-arrow"></i>
+      </a>
+    </div>
+    <div class="col-md-4 dash-anim" style="--i:2">
+      <a href="/my-applications" class="dash-action">
+        <span class="dash-action-icon dash-action-orange"><i class="bi bi-file-earmark-check"></i></span>
+        <span class="dash-action-text">
+          <span class="dash-action-title">Track Applications</span>
+          <span class="dash-action-desc">Check whether you are Applied, Shortlisted or Rejected.</span>
+        </span>
+        <i class="bi bi-chevron-right dash-action-arrow"></i>
+      </a>
+    </div>
+    <div class="col-md-4 dash-anim" style="--i:3">
+      <a href="/chat" class="dash-action">
+        <span class="dash-action-icon dash-action-sky"><i class="bi bi-chat-dots"></i></span>
+        <span class="dash-action-text">
+          <span class="dash-action-title">Messages</span>
+          <span class="dash-action-desc">Chat with your connections and mentors.</span>
+        </span>
+        <i class="bi bi-chevron-right dash-action-arrow"></i>
+      </a>
+    </div>
+    <div class="col-md-4 dash-anim" style="--i:4">
+      <a href="/announcements" class="dash-action">
+        <span class="dash-action-icon dash-action-red"><i class="bi bi-megaphone"></i></span>
+        <span class="dash-action-text">
+          <span class="dash-action-title">Announcements</span>
+          <span class="dash-action-desc">Read the latest notices from faculty.</span>
+        </span>
+        <i class="bi bi-chevron-right dash-action-arrow"></i>
+      </a>
+    </div>
+    <div class="col-md-4 dash-anim" style="--i:5">
+      <a href="/notifications" class="dash-action">
+        <span class="dash-action-icon dash-action-slate"><i class="bi bi-bell"></i></span>
+        <span class="dash-action-text">
+          <span class="dash-action-title">Notifications</span>
+          <span class="dash-action-desc">Requests, new jobs and status updates in one place.</span>
+        </span>
+        <i class="bi bi-chevron-right dash-action-arrow"></i>
+      </a>
+    </div>
   </div>
-  <div class="col-md-4"><a href="/jobs" class="text-decoration-none">
-    <div class="card action-card shadow-sm h-100"><div class="card-body">
-      <h5><i class="bi bi-briefcase text-success"></i> Browse Jobs</h5>
-      <p class="text-muted mb-0">See jobs posted by alumni and apply in one click.</p>
-    </div></div></a>
-  </div>
-  <div class="col-md-4"><a href="/my-applications" class="text-decoration-none">
-    <div class="card action-card shadow-sm h-100"><div class="card-body">
-      <h5><i class="bi bi-file-earmark-check text-warning"></i> Track Applications</h5>
-      <p class="text-muted mb-0">Check whether you are Applied, Shortlisted or Rejected.</p>
-    </div></div></a>
-  </div>
-  <div class="col-md-4"><a href="/chat" class="text-decoration-none">
-    <div class="card action-card shadow-sm h-100"><div class="card-body">
-      <h5><i class="bi bi-chat-dots text-info"></i> Messages</h5>
-      <p class="text-muted mb-0">Chat with your connections and mentors.</p>
-    </div></div></a>
-  </div>
-  <div class="col-md-4"><a href="/announcements" class="text-decoration-none">
-    <div class="card action-card shadow-sm h-100"><div class="card-body">
-      <h5><i class="bi bi-megaphone text-danger"></i> Announcements</h5>
-      <p class="text-muted mb-0">Read the latest notices from faculty.</p>
-    </div></div></a>
-  </div>
-  <div class="col-md-4"><a href="/notifications" class="text-decoration-none">
-    <div class="card action-card shadow-sm h-100"><div class="card-body">
-      <h5><i class="bi bi-bell text-secondary"></i> Notifications</h5>
-      <p class="text-muted mb-0">Requests, new jobs and status updates in one place.</p>
-    </div></div></a>
-  </div>
+
 </div>
 
 <%- include('partials/footer') %>

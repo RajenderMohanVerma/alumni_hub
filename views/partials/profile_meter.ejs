@@ -1,19 +1,22 @@
 <!-- ============ PROFILE COMPLETENESS METER ============
      profileComplete (0-100) is computed on the server in app.js from
      the user row + role profile row (name, phone, photo, bio, skills
-     and the three role-specific fields). -->
-<div class="card shadow-sm mb-4 profile-meter">
+     and the three role-specific fields).
+     Redesigned with the dashboards pass: gradient bar that animates
+     to its percentage on load (CSS keyframes grow it from 0 to the
+     inline width; disabled under prefers-reduced-motion). -->
+<div class="card dash-meter mb-4 dash-anim" style="--i:1">
   <div class="card-body d-flex flex-wrap align-items-center gap-3">
+    <div class="dash-meter-icon"><i class="bi bi-person-check"></i></div>
     <div class="flex-grow-1" style="min-width: 220px;">
       <div class="d-flex justify-content-between align-items-center">
-        <strong><i class="bi bi-person-check text-primary"></i> Profile completeness</strong>
-        <span class="badge bg-primary"><%= profileComplete %>%</span>
+        <strong>Profile completeness</strong>
+        <span class="dash-meter-pct"><%= profileComplete %>%</span>
       </div>
-      <div class="progress mt-2" role="progressbar"
+      <div class="progress dash-meter-track mt-2" role="progressbar"
            aria-valuenow="<%= profileComplete %>" aria-valuemin="0" aria-valuemax="100"
            aria-label="Profile completeness">
-        <div class="progress-bar progress-bar-striped progress-bar-animated"
-             style="width: <%= profileComplete %>%"></div>
+        <div class="dash-meter-bar" style="width: <%= profileComplete %>%"></div>
       </div>
       <small class="text-muted">
         <% if (profileComplete >= 100) { %>
