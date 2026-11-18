@@ -151,6 +151,15 @@ CREATE TABLE IF NOT EXISTS notifications (
     is_read    INTEGER NOT NULL DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now', 'localtime'))
 );
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    email      TEXT NOT NULL,
+    subject    TEXT,
+    message    TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+);
 """
 
 

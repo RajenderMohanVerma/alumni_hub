@@ -138,13 +138,16 @@ app.jinja_env.globals["avatar_url"] = avatar_url
 
 @app.context_processor
 def inject_badges():
-    """Add unread notification/message counts to every page (navbar badges)."""
+    """Add unread notification/message counts to every page (navbar badges),
+    plus the current year (used in the footer copyright line)."""
     if current_user.is_authenticated:
         return {
             "unread_notifications": models.unread_notification_count(current_user.id),
             "unread_messages": models.unread_message_count(current_user.id),
+            "current_year": datetime.now().year,
         }
-    return {"unread_notifications": 0, "unread_messages": 0}
+    return {"unread_notifications": 0, "unread_messages": 0,
+            "current_year": datetime.now().year}
 
 
 @app.template_filter("datetimeformat")
@@ -219,6 +222,37 @@ def home():
 @app.route("/about")
 def about():
     return render_template("about.html")
+
+
+@app.route("/services")
+def services():
+    """Public page describing what the platform offers."""
+    return render_template("services.html")
+
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    """Public contact page. Submitted messages are saved in the
+    `contact_messages` table so the admin can read them later."""
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        email = request.form["email"].strip()
+        subject = request.form.get("subject", "").strip()
+        message = request.form["message"].strip()
+        if not name or not email or not message:
+            flash("Please fill your name, email and message.", "warning")
+        else:
+            db = get_db()
+            db.execute(
+                """INSERT INTO contact_messages (name, email, subject, message)
+                   VALUES (?, ?, ?, ?)""",
+                (name, email, subject, message),
+            )
+            db.commit()
+            flash("Thank you! Your message has been sent. "
+                  "We will get back to you soon.", "success")
+            return redirect(url_for("contact"))
+    return render_template("contact.html")
 
 
 # ---------------------------------------------------------------------------
@@ -934,6 +968,7 @@ def admin_dashboard():
         "jobs": db.execute("SELECT COUNT(*) c FROM jobs").fetchone()["c"],
         "applications": db.execute("SELECT COUNT(*) c FROM applications").fetchone()["c"],
         "connections": db.execute("SELECT COUNT(*) c FROM connections WHERE status='accepted'").fetchone()["c"],
+        "contact_messages": db.execute("SELECT COUNT(*) c FROM contact_messages").fetchone()["c"],
     }
     recent_users = db.execute(
         "SELECT * FROM users WHERE role != 'admin' ORDER BY id DESC LIMIT 5"
@@ -1011,6 +1046,27 @@ def admin_delete_job(job_id):
     db.commit()
     flash("Job deleted.", "info")
     return redirect(url_for("admin_jobs"))
+
+
+@app.route("/admin/messages")
+@role_required("admin")
+def admin_messages():
+    """Messages sent from the public Contact page, newest first."""
+    db = get_db()
+    rows = db.execute(
+        "SELECT * FROM contact_messages ORDER BY id DESC"
+    ).fetchall()
+    return render_template("admin/messages.html", messages=rows)
+
+
+@app.route("/admin/messages/<int:msg_id>/delete", methods=["POST"])
+@role_required("admin")
+def admin_delete_message(msg_id):
+    db = get_db()
+    db.execute("DELETE FROM contact_messages WHERE id = ?", (msg_id,))
+    db.commit()
+    flash("Contact message deleted.", "info")
+    return redirect(url_for("admin_messages"))
 
 
 # ---------------------------------------------------------------------------

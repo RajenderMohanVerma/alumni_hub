@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Services{% endblock %}
+
+{% block content %}
+<!-- Hero strip -->
+<section class="hero">
+    <div class="container text-center">
+        <h1 class="display-6 fw-bold">Our Services</h1>
+        <p class="lead mx-auto mb-0" style="max-width: 620px;">
+            Everything the college community needs in one place &mdash;
+            networking, mentoring, jobs and campus updates.
+        </p>
+    </div>
+</section>
+
+<div class="container mt-5">
+    <!-- Service cards -->
+    <div class="row g-4 reveal">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-user-friends fa-2x text-primary mb-3"></i>
+                <h5>Alumni Networking</h5>
+                <p class="text-muted mb-0">Find students, alumni and faculty in the
+                    member directory and send connection requests to grow your
+                    college network.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-comments fa-2x text-success mb-3"></i>
+                <h5>One-to-One Chat</h5>
+                <p class="text-muted mb-0">Message your connections directly &mdash;
+                    ask for career guidance, project help or referrals in a
+                    simple private chat.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-briefcase fa-2x text-warning mb-3"></i>
+                <h5>Job Board</h5>
+                <p class="text-muted mb-0">Alumni post jobs and internships from
+                    their companies; students browse, search and apply with a
+                    cover note in one click.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-bullhorn fa-2x text-info mb-3"></i>
+                <h5>Announcements</h5>
+                <p class="text-muted mb-0">Faculty members post announcements
+                    about events, placements and deadlines that every member
+                    can read in one place.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-address-book fa-2x text-primary mb-3"></i>
+                <h5>Member Directory</h5>
+                <p class="text-muted mb-0">A searchable directory of all members
+                    with profiles, photos and skills &mdash; filter by role or
+                    search by name, skill or company.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-shield-alt fa-2x text-danger mb-3"></i>
+                <h5>Admin Management</h5>
+                <p class="text-muted mb-0">A dedicated admin panel with platform
+                    statistics, user management (block / delete) and control
+                    over all job postings.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <h2 class="page-title text-center mt-5 mb-4 reveal">How It Works</h2>
+    <div class="row g-4 text-center reveal">
+        <div class="col-md-4">
+            <div class="step-circle mx-auto mb-3">1</div>
+            <h6 class="fw-bold">Create Your Account</h6>
+            <p class="text-muted small mb-0">Register as a Student, Alumni or
+                Faculty member and complete your profile with a photo and skills.</p>
+        </div>
+        <div class="col-md-4">
+            <div class="step-circle mx-auto mb-3">2</div>
+            <h6 class="fw-bold">Connect &amp; Chat</h6>
+            <p class="text-muted small mb-0">Search the directory, send connection
+                requests and start one-to-one conversations with your network.</p>
+        </div>
+        <div class="col-md-4">
+            <div class="step-circle mx-auto mb-3">3</div>
+            <h6 class="fw-bold">Grow Together</h6>
+            <p class="text-muted small mb-0">Apply for jobs posted by alumni,
+                share openings from your company and follow faculty announcements.</p>
+        </div>
+    </div>
+</div>
+
+<!-- CTA band -->
+<section class="cta-band mt-5 reveal">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-2">Join your college community today</h3>
+        <p class="mb-4">Create a free account and start connecting in minutes.</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">
+            <i class="fas fa-gauge me-1"></i> Go to Dashboard
+        </a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-2">
+            <i class="fas fa-user-plus me-1"></i> Join Now
+        </a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-sign-in-alt me-1"></i> Login
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

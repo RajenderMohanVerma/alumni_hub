@@ -29,29 +29,34 @@
 </section>
 
 <div class="container mt-5">
-    <!-- Live counts from the database -->
-    <div class="row g-3 text-center">
+    <!-- Live counts from the database. The numbers count up from 0 when
+         they scroll into view (see the .counter code in main.js). -->
+    <div class="row g-3 text-center reveal">
         <div class="col-6 col-md-3">
-            <div class="card p-3"><h3 class="text-primary mb-0">{{ stats.students }}</h3>
+            <div class="card p-3"><h3 class="text-primary mb-0">
+                <span class="counter" data-count="{{ stats.students }}">{{ stats.students }}</span></h3>
                 <small class="text-muted">Students</small></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card p-3"><h3 class="text-success mb-0">{{ stats.alumni }}</h3>
+            <div class="card p-3"><h3 class="text-success mb-0">
+                <span class="counter" data-count="{{ stats.alumni }}">{{ stats.alumni }}</span></h3>
                 <small class="text-muted">Alumni</small></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card p-3"><h3 class="text-purple mb-0" style="color:#7c3aed;">{{ stats.faculty }}</h3>
+            <div class="card p-3"><h3 class="mb-0" style="color:#7c3aed;">
+                <span class="counter" data-count="{{ stats.faculty }}">{{ stats.faculty }}</span></h3>
                 <small class="text-muted">Faculty</small></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card p-3"><h3 class="text-warning mb-0">{{ stats.jobs }}</h3>
+            <div class="card p-3"><h3 class="text-warning mb-0">
+                <span class="counter" data-count="{{ stats.jobs }}">{{ stats.jobs }}</span></h3>
                 <small class="text-muted">Jobs Posted</small></div>
         </div>
     </div>
 
     <!-- Features -->
-    <h2 class="page-title text-center mt-5 mb-4">What can you do here?</h2>
-    <div class="row g-4">
+    <h2 class="page-title text-center mt-5 mb-4 reveal">What can you do here?</h2>
+    <div class="row g-4 reveal">
         <div class="col-md-4">
             <div class="card h-100 p-4 text-center hover-lift">
                 <i class="fas fa-user-friends fa-2x text-primary mb-3"></i>
@@ -78,10 +83,52 @@
         </div>
     </div>
 
+    <!-- Services preview (full list is on the Services page) -->
+    <h2 class="page-title text-center mt-5 mb-4 reveal">Our Services</h2>
+    <div class="row g-4 reveal">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-user-friends fa-2x text-primary mb-3"></i>
+                <h6 class="fw-bold">Alumni Networking</h6>
+                <p class="text-muted small mb-0">Connect with students, alumni
+                    and faculty across the college.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-comments fa-2x text-success mb-3"></i>
+                <h6 class="fw-bold">One-to-One Chat</h6>
+                <p class="text-muted small mb-0">Private messaging with your
+                    connections for guidance and help.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-briefcase fa-2x text-warning mb-3"></i>
+                <h6 class="fw-bold">Job Board</h6>
+                <p class="text-muted small mb-0">Jobs and internships posted by
+                    alumni, open for students to apply.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 p-4 text-center hover-lift">
+                <i class="fas fa-bullhorn fa-2x text-info mb-3"></i>
+                <h6 class="fw-bold">Announcements</h6>
+                <p class="text-muted small mb-0">Campus updates and notices
+                    posted by faculty for everyone.</p>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-3 reveal">
+        <a href="{{ url_for('services') }}" class="btn btn-outline-primary">
+            View All Services <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+
     <!-- Latest jobs -->
     {% if latest_jobs %}
-    <h2 class="page-title mt-5 mb-3">Latest Jobs</h2>
-    <div class="row g-3">
+    <h2 class="page-title mt-5 mb-3 reveal">Latest Jobs</h2>
+    <div class="row g-3 reveal">
         {% for job in latest_jobs %}
         <div class="col-md-4">
             <div class="card h-100 p-3 hover-lift">
@@ -99,4 +146,25 @@
     </div>
     {% endif %}
 </div>
+
+<!-- CTA band -->
+<section class="cta-band mt-5 reveal">
+    <div class="container text-center">
+        <h3 class="fw-bold mb-2">Ready to reconnect with your college?</h3>
+        <p class="mb-4">Join Alumni Hub and become part of a growing community
+            of students, alumni and faculty.</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('search') }}" class="btn btn-light btn-lg">
+            <i class="fas fa-users me-1"></i> Explore Members
+        </a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-2">
+            <i class="fas fa-user-plus me-1"></i> Join Now
+        </a>
+        <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-envelope me-1"></i> Contact Us
+        </a>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

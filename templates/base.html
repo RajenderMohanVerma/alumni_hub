@@ -11,6 +11,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <!-- Our custom styles -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Mark that JavaScript is available. The scroll-in animation CSS only
+         hides elements when this class is present, so the page content is
+         never hidden for visitors with JavaScript switched off. -->
+    <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
 
@@ -28,24 +32,40 @@
 
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto">
+                <!-- Common pages - visible to everyone (guests + all roles).
+                     The link of the page currently open gets the .active class. -->
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'home' }}"
+                       href="{{ url_for('home') }}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about') }}">About</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'about' }}"
+                       href="{{ url_for('about') }}">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'services' }}"
+                       href="{{ url_for('services') }}">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'contact' }}"
+                       href="{{ url_for('contact') }}">Contact</a>
                 </li>
                 {% if current_user.is_authenticated and current_user.role != 'admin' %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}"
+                       href="{{ url_for('dashboard') }}">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('search') }}">Members</a>
+                    <a class="nav-link {{ 'active' if request.endpoint in ('search', 'profile') }}"
+                       href="{{ url_for('search') }}">Members</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('connections') }}">Connections</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'connections' }}"
+                       href="{{ url_for('connections') }}">Connections</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('chat') }}">
+                    <a class="nav-link {{ 'active' if request.endpoint in ('chat', 'conversation') }}"
+                       href="{{ url_for('chat') }}">
                         Messages
                         {% if unread_messages %}
                         <span class="badge bg-danger">{{ unread_messages }}</span>
@@ -53,21 +73,30 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('jobs') }}">Jobs</a>
+                    <a class="nav-link {{ 'active' if request.endpoint in ('jobs', 'job_detail', 'post_job', 'edit_job', 'my_jobs', 'applicants', 'applied_jobs') }}"
+                       href="{{ url_for('jobs') }}">Jobs</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('announcements') }}">Announcements</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'announcements' }}"
+                       href="{{ url_for('announcements') }}">Announcements</a>
                 </li>
                 {% endif %}
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin_dashboard' }}"
+                       href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin_users') }}">Users</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin_users' }}"
+                       href="{{ url_for('admin_users') }}">Users</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin_jobs') }}">Jobs</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin_jobs' }}"
+                       href="{{ url_for('admin_jobs') }}">Jobs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'admin_messages' }}"
+                       href="{{ url_for('admin_messages') }}">Messages</a>
                 </li>
                 {% endif %}
             </ul>
@@ -75,7 +104,8 @@
             <ul class="navbar-nav">
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('notifications') }}" title="Notifications">
+                    <a class="nav-link {{ 'active' if request.endpoint == 'notifications' }}"
+                       href="{{ url_for('notifications') }}" title="Notifications">
                         <i class="fas fa-bell"></i>
                         {% if unread_notifications %}
                         <span class="badge bg-danger">{{ unread_notifications }}</span>
@@ -95,6 +125,9 @@
                             <i class="fas fa-user me-2"></i>My Profile</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('edit_profile') }}">
                             <i class="fas fa-pen me-2"></i>Edit Profile</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_messages') }}">
+                            <i class="fas fa-envelope me-2"></i>Contact Messages</a></li>
                         {% endif %}
                         <li><a class="dropdown-item" href="{{ url_for('change_password') }}">
                             <i class="fas fa-key me-2"></i>Change Password</a></li>
@@ -105,7 +138,8 @@
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    <a class="nav-link {{ 'active' if request.endpoint == 'login' }}"
+                       href="{{ url_for('login') }}">Login</a>
                 </li>
                 <li class="nav-item">
                     <a class="btn btn-light btn-sm mt-1 ms-lg-2" href="{{ url_for('register') }}">
@@ -139,12 +173,77 @@
     {% block content %}{% endblock %}
 </main>
 
-<!-- ======================= FOOTER ======================= -->
-<footer class="mt-5 py-4">
-    <div class="container text-center">
-        <p class="mb-1 fw-bold text-white"><i class="fas fa-graduation-cap me-1"></i> Alumni Hub</p>
-        <p class="mb-0 small">Connecting Students, Alumni &amp; Faculty &mdash; an MCA Minor Project
-            built with Flask, SQLite &amp; Bootstrap.</p>
+<!-- ======================= FOOTER (on every page) ======================= -->
+<footer class="site-footer mt-5">
+    <div class="container pt-5 pb-4">
+        <div class="row g-4">
+            <!-- Column 1: brand, short about, social icons -->
+            <div class="col-md-6 col-lg-4">
+                <p class="footer-brand">
+                    <i class="fas fa-graduation-cap me-1"></i> Alumni Hub
+                </p>
+                <p class="small mb-3">
+                    Alumni Hub connects the students, alumni and faculty of our
+                    college on one platform &mdash; build your profile, grow your
+                    network, find jobs and stay in touch with your campus community.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon" aria-label="X (Twitter)"><i class="fab fa-x-twitter"></i></a>
+                    <a href="#" class="social-icon" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+
+            <!-- Column 2: quick links to the common pages -->
+            <div class="col-md-6 col-lg-2">
+                <p class="footer-title">Quick Links</p>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                    <li><a href="{{ url_for('services') }}">Services</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3: platform features (guests are sent to login) -->
+            <div class="col-md-6 col-lg-3">
+                <p class="footer-title">Features</p>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('connections') if current_user.is_authenticated else url_for('login') }}">
+                        <i class="fas fa-user-friends me-2"></i>Connect with Members</a></li>
+                    <li><a href="{{ url_for('chat') if current_user.is_authenticated else url_for('login') }}">
+                        <i class="fas fa-comments me-2"></i>One-to-One Chat</a></li>
+                    <li><a href="{{ url_for('jobs') if current_user.is_authenticated else url_for('login') }}">
+                        <i class="fas fa-briefcase me-2"></i>Job Board</a></li>
+                    <li><a href="{{ url_for('announcements') if current_user.is_authenticated else url_for('login') }}">
+                        <i class="fas fa-bullhorn me-2"></i>Announcements</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 4: contact information -->
+            <div class="col-md-6 col-lg-3">
+                <p class="footer-title">Contact</p>
+                <ul class="footer-contact">
+                    <li><i class="fas fa-location-dot me-2"></i>
+                        College Campus, Rohini,<br>
+                        <span class="ms-4">New Delhi &ndash; 110085</span></li>
+                    <li><i class="fas fa-envelope me-2"></i>alumnihub@college.edu</li>
+                    <li><i class="fas fa-phone me-2"></i>+91 98765 43210</li>
+                    <li><i class="fas fa-clock me-2"></i>Mon &ndash; Sat, 9 AM &ndash; 5 PM</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="footer-bottom py-3">
+        <div class="container d-flex flex-column flex-md-row justify-content-between
+                    align-items-center gap-1 text-center text-md-start">
+            <span class="small">&copy; {{ current_year }} Alumni Hub &mdash; MCA Minor Project</span>
+            <span class="small">Built with Flask, SQLite &amp; Bootstrap</span>
+        </div>
     </div>
 </footer>
 

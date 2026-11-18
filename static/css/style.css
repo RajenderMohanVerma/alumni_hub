@@ -201,3 +201,169 @@ footer {
     .stat-card .stat-number { font-size: 1.35rem; }
     .stat-card > div:last-child { min-width: 0; font-size: 0.85rem; line-height: 1.25; }
 }
+
+/* ==========================================================================
+   POLISH PASS - animations, footer and extra components
+   ========================================================================== */
+
+/* ---------- Animated hero gradient ----------
+   The same blue gradient as .hero above, but larger than the element and
+   slowly moving (background-position animation) for a subtle living feel. */
+.hero {
+    background-size: 180% 180%;
+    animation: heroShift 14s ease infinite;
+}
+
+@keyframes heroShift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+/* ---------- Scroll-in reveal animation ----------
+   Elements with class .reveal start slightly lower and transparent, and
+   fade/slide in when main.js adds .visible as they scroll into view.
+   The hidden start state only applies when JavaScript is on (html.js is
+   added by a one-line script in base.html), so content is never hidden
+   for visitors without JavaScript. */
+.reveal {
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+html.js .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+}
+
+html.js .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Respect users who prefer reduced motion: no sliding, everything visible */
+@media (prefers-reduced-motion: reduce) {
+    html.js .reveal { opacity: 1; transform: none; transition: none; }
+    .hero { animation: none; }
+}
+
+/* ---------- Navbar link underline effect ---------- */
+.navbar-ah .nav-link {
+    position: relative;
+}
+
+.navbar-ah .nav-link:not(.dropdown-toggle)::after {
+    content: "";
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.3rem;
+    height: 2px;
+    border-radius: 2px;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+}
+
+.navbar-ah .nav-link:not(.dropdown-toggle):hover::after,
+.navbar-ah .nav-link:not(.dropdown-toggle).active::after {
+    transform: scaleX(1);
+}
+
+/* ---------- Rich footer (base.html) ---------- */
+.site-footer {
+    background: #0f172a;
+    color: #cbd5e1;
+}
+
+.site-footer .footer-brand {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.site-footer .footer-title {
+    color: #fff;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.site-footer .footer-links,
+.site-footer .footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.site-footer .footer-links li,
+.site-footer .footer-contact li {
+    margin-bottom: 0.55rem;
+}
+
+.site-footer a {
+    color: #cbd5e1;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.site-footer a:hover {
+    color: #fff;
+}
+
+.site-footer .social-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.site-footer .social-icon:hover {
+    background: var(--ah-primary);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.site-footer .footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+}
+
+/* ---------- Call-to-action band (home & services pages) ---------- */
+.cta-band {
+    background: linear-gradient(120deg, var(--ah-primary-dark), var(--ah-primary) 55%, var(--ah-sky));
+    background-size: 180% 180%;
+    animation: heroShift 14s ease infinite;
+    color: #fff;
+    padding: 3rem 0;
+}
+
+/* ---------- "How it works" step circles (services page) ---------- */
+.step-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ah-primary), var(--ah-sky));
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+/* ---------- Technology pills (about page) ---------- */
+.tech-pill {
+    background: #eef4ff;
+    color: var(--ah-primary-dark);
+    border: 1px solid #dbe7ff;
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
